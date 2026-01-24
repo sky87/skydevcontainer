@@ -1,4 +1,4 @@
-FROM debian:trixie-slim@sha256:d637807aba98f742a62ad9b0146579ceb0297a3c831f56b2361664b7f5fbc75b
+FROM debian:trixie-slim@sha256:77ba0164de17b88dd0bf6cdc8f65569e6e5fa6cd256562998b62553134a00ef0
 
 ENV DEBIAN_FRONTEND=noninteractive
 
