@@ -8,6 +8,7 @@ A VS Code Dev Container with a multi-language development environment based on D
 - **Rust**: rustup with cargo
 - **Python**: Python 3 with uv package manager
 - **Node.js**: via nvm (LTS version)
+- **Bun**: JavaScript/TypeScript runtime and package manager
 - **.NET**: LTS version
 - **LaTeX**: texlive with latexmk
 
@@ -36,6 +37,16 @@ A VS Code Dev Container with a multi-language development environment based on D
 - **User**: `sky` with passwordless sudo
 - **Shell**: zsh
 - **Home directory**: Persisted via Docker volume (`sky-home`)
+- **Image**: Published to `ghcr.io/sky87/skydevcontainer:latest`
+
+## Automatic Dependency Installation
+
+If you copy `post-create.sh` to your project, dependencies are automatically installed when the container starts:
+
+- **Node.js**: Runs `bun install` if `package.json` exists
+- **Python**: Runs `uv sync` or `uv pip install -r requirements.txt`
+- **Rust**: Runs `cargo fetch` if `Cargo.toml` exists
+- **.NET**: Runs `dotnet restore` for C#/F# projects
 
 ## VS Code Extensions
 
@@ -46,3 +57,4 @@ The following extensions are automatically installed:
 - clangd
 - LaTeX Workshop
 - C# Dev Kit
+- Bun

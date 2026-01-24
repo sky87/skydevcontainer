@@ -16,8 +16,9 @@ This builds the Docker image tagged as `devcontainer-sky:latest`.
 
 ## Architecture
 
-- **Dockerfile**: Defines the container with Clang/C++, Rust, Python, Node.js, .NET, and LaTeX toolchains. All tools are installed to `/opt/` with sky ownership to allow self-updates.
-- **devcontainer.json**: VS Code Dev Container configuration referencing the built image. Uses a Docker volume (`sky-home`) to persist `/home/sky`.
+- **Dockerfile**: Defines the container with Clang/C++, Rust, Python, Node.js, Bun, .NET, and LaTeX toolchains. All tools are installed to `/opt/` with sky ownership to allow self-updates.
+- **devcontainer.json**: VS Code Dev Container configuration using the published image from `ghcr.io/sky87/skydevcontainer:latest`. Uses a Docker volume (`sky-home`) to persist `/home/sky`.
+- **post-create.sh**: Optional script that runs after container creation to auto-install project dependencies (bun, uv, cargo, dotnet).
 - **zshrc**: System zshrc copied to `/etc/zsh/zshrc` that sets up PATH and sources nvm/fzf.
 
 ## Tool Locations
@@ -31,3 +32,10 @@ This builds the Docker image tagged as `devcontainer-sky:latest`.
 | fzf | `/opt/fzf` |
 | Claude Code | `/opt/claude-code` |
 | Bun | `/opt/bun` |
+
+## Documentation Maintenance
+
+When making changes to this project, keep the documentation up to date:
+
+- **CLAUDE.md**: Update when adding/removing tools, changing build processes, or modifying architecture. Keep the tool locations table current.
+- **README.md**: Update when adding/removing toolchains, changing usage instructions, or modifying VS Code extensions.
