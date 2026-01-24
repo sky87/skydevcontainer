@@ -1,4 +1,47 @@
-# === Devcontainer tools ===
+HISTSIZE=999999999
+SAVEHIST=$HISTSIZE
+setopt INC_APPEND_HISTORY   # save immediately
+setopt SHARE_HISTORY        # share between sessions
+setopt HIST_IGNORE_ALL_DUPS # ignore dups
+setopt HIST_IGNORE_SPACE    # ignore entries starting with a line
+
+setopt auto_cd
+unsetopt beep
+
+zstyle :compinstall filename "$HOME/.zshrc"
+autoload -Uz compinit
+compinit
+
+autoload -U add-zsh-hook
+
+##############
+# key bindings
+
+bindkey -e
+
+bindkey '^H' backward-kill-word
+bindkey '3~' kill-word
+bindkey '^[[1;5C' forward-word
+bindkey '^[[1;5D' backward-word
+
+##############
+# prompt
+
+autoload -Uz vcs_info
+
+precmd() {
+  if [ -z "$_first_prompt" ]; then
+    export _first_prompt="yes"
+  else
+    echo ""
+  fi
+  vcs_info
+}
+zstyle ':vcs_info:git:*' formats '%b '
+
+setopt PROMPT_SUBST
+PROMPT='%F{green}%D %*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f%F{8}${VIRTUAL_ENV_PROMPT}%f
+$ '
 
 # Paths
 export PATH="/opt/claude-code:/opt/bun/bin:/opt/dotnet:/opt/fzf/bin:/opt/uv:/opt/rust/cargo/bin:$PATH"
@@ -12,5 +55,4 @@ export NVM_DIR="/opt/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
 # fzf
-[ -f /opt/fzf/shell/completion.zsh ] && source /opt/fzf/shell/completion.zsh
-[ -f /opt/fzf/shell/key-bindings.zsh ] && source /opt/fzf/shell/key-bindings.zsh
+source <(fzf --zsh)
