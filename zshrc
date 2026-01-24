@@ -61,3 +61,5 @@ source <(fzf --zsh)
 
 alias ll='ls -alh --color=auto'
 alias l='ls -lh --color=auto'
+alias py='python3'
+alias c='claude'
