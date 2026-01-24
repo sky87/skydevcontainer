@@ -75,8 +75,9 @@ RUN mkdir -p /opt/dotnet \
 
 # Install Claude Code to /opt/claude-code (sky-owned for updates)
 RUN curl -fsSL https://claude.ai/install.sh | bash \
-  && mkdir -p /opt/claude-code \
-  && mv /root/.local/bin/claude /opt/claude-code/ \
+  && mkdir -p /opt/claude-code/bin \
+  && mv /root/.local/share/claude /opt/claude-code/data \
+  && ln -s "$(ls -d /opt/claude-code/data/versions/*/ | head -1)claude" /opt/claude-code/bin/claude \
   && rm -rf /root/.claude /root/.local \
   && chown -R sky:sky /opt/claude-code
 

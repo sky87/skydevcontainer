@@ -44,7 +44,7 @@ PROMPT='%F{green}%D %*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f%F{8}${VIRTUAL_
 $ '
 
 # Paths
-export PATH="/opt/claude-code:/opt/bun/bin:/opt/dotnet:/opt/fzf/bin:/opt/uv:/opt/rust/cargo/bin:$PATH"
+export PATH="/opt/claude-code/bin:/opt/bun/bin:/opt/dotnet:/opt/fzf/bin:/opt/uv:/opt/rust/cargo/bin:$PATH"
 
 # .NET
 export DOTNET_ROOT="/opt/dotnet"
@@ -56,3 +56,8 @@ export NVM_DIR="/opt/nvm"
 
 # fzf
 source <(fzf --zsh)
+
+# Aliases
+
+alias ll='ls -alh --color=auto'
+alias l='ls -lh --color=auto'
