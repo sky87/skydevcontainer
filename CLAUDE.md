@@ -30,3 +30,4 @@ This builds the Docker image tagged as `devcontainer-sky:latest`.
 | .NET | `/opt/dotnet` |
 | fzf | `/opt/fzf` |
 | Claude Code | `/opt/claude-code` |
+| Bun | `/opt/bun` |

@@ -79,6 +79,11 @@ RUN curl -fsSL https://claude.ai/install.sh | bash \
   && rm -rf /root/.claude /root/.local \
   && chown -R sky:sky /opt/claude-code
 
+# Install Bun to /opt/bun (sky-owned for updates)
+ENV BUN_INSTALL=/opt/bun
+RUN curl -fsSL https://bun.sh/install | bash \
+  && chown -R sky:sky /opt/bun
+
 # Copy default zshrc to system location
 COPY zshrc /etc/zsh/zshrc
 

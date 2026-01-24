@@ -1,7 +1,7 @@
 # === Devcontainer tools ===
 
 # Paths
-export PATH="/opt/claude-code:/opt/dotnet:/opt/fzf/bin:/opt/uv:/opt/rust/cargo/bin:$PATH"
+export PATH="/opt/claude-code:/opt/bun/bin:/opt/dotnet:/opt/fzf/bin:/opt/uv:/opt/rust/cargo/bin:$PATH"
 
 # .NET
 export DOTNET_ROOT="/opt/dotnet"
