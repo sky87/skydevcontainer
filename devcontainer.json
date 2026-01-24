@@ -1,6 +1,7 @@
 {
   "name": "Dev Container",
   "image": "ghcr.io/sky87/skydevcontainer:latest",
+  "initializeCommand": "docker pull ghcr.io/sky87/skydevcontainer:latest",
   "mounts": [
     "source=sky-home,target=/home/sky,type=volume"
   ],
