@@ -1,0 +1,20 @@
+{
+  "name": "Dev Container",
+  "image": "devcontainer-sky:latest",
+  "mounts": [
+    "source=sky-home,target=/home/sky,type=volume"
+  ],
+  "remoteUser": "sky",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "llvm-vs-code-extensions.vscode-clangd",
+        "james-yu.latex-workshop",
+        "ms-dotnettools.csdevkit"
+      ]
+    }
+  }
+}
