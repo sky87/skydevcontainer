@@ -1,6 +1,6 @@
 {
   "name": "Dev Container",
-  "image": "devcontainer-sky:latest",
+  "image": "ghcr.io/sky87/skydevcontainer:latest",
   "mounts": [
     "source=sky-home,target=/home/sky,type=volume"
   ],
