@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   sudo \
   zsh \
   unzip \
+  build-essential \
   make \
   cmake \
   ninja-build \
@@ -31,6 +32,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   texlive-fonts-recommended \
   texlive-latex-extra \
   latexmk \
+  # Document tools
+  pandoc \
+  zip \
   # .NET dependencies
   libicu-dev \
   libssl-dev \
