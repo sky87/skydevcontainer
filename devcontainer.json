@@ -16,7 +16,8 @@
         "llvm-vs-code-extensions.vscode-clangd",
         "james-yu.latex-workshop",
         "ms-dotnettools.csdevkit",
-        "oven.bun-vscode"
+        "oven.bun-vscode",
+        "Anthropic.claude-code"
       ]
     }
   }
