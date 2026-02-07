@@ -38,6 +38,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   # .NET dependencies
   libicu-dev \
   libssl-dev \
+  # Playwright firefox dependencies
+  libasound2 \
+  libatk1.0-0t64 libcairo-gobject2 libcairo2 libdbus-1-3 libdbus-glib-1-2 \
+  libfontconfig1 libfreetype6 libgdk-pixbuf-2.0-0 libglib2.0-0t64 libgtk-3-0t64 \
+  libharfbuzz0b libpango-1.0-0 libpangocairo-1.0-0 libx11-6 libx11-xcb1 libxcb-shm0 \
+  libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 \
+  libxrandr2 libxrender1 libxtst6 xvfb fonts-liberation fonts-freefont-ttf \
   && rm -rf /var/lib/apt/lists/*
 
 # Create user with passwordless sudo and zsh shell
