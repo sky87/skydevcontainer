@@ -2,7 +2,7 @@
   "name": "Dev Container",
   "image": "ghcr.io/sky87/skydevcontainer:latest",
   "initializeCommand": "docker pull ghcr.io/sky87/skydevcontainer:latest",
-  "postCreateCommand": "[ -f post-create.sh ] && bash post-create.sh || true",
+  "postCreateCommand": "[ -f .devcontainer/post-create.sh ] && bash .devcontainer/post-create.sh || true",
   "mounts": [
     "source=sky-home,target=/home/sky,type=volume"
   ],
