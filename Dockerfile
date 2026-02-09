@@ -97,6 +97,9 @@ ENV BUN_INSTALL=/opt/bun
 RUN curl -fsSL https://bun.sh/install | bash \
   && chown -R sky:sky /opt/bun
 
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+
 # Copy default zshrc to system location
 COPY zshrc /etc/zsh/zshrc
 
