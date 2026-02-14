@@ -27,6 +27,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   # Python
   python3 \
   python3-venv \
+  # Perf
+  linux-perf \
+  valgrind \
   # LaTeX
   texlive-latex-recommended \
   texlive-fonts-recommended \
@@ -105,3 +108,7 @@ COPY zshrc /etc/zsh/zshrc
 
 USER sky
 WORKDIR /home/sky
+
+RUN cargo install \
+  flamegraph \
+  rustfilt
