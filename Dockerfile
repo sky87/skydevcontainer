@@ -102,6 +102,7 @@ RUN curl -fsSL https://bun.sh/install | bash \
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
+ENV PATH="/opt/rust/cargo/bin:$PATH"
 
 # Copy default zshrc to system location
 COPY zshrc /etc/zsh/zshrc
