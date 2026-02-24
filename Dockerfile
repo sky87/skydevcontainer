@@ -30,6 +30,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   # Perf
   linux-perf \
   valgrind \
+  # Coverage
+  lcov \
   # LaTeX
   texlive-latex-recommended \
   texlive-fonts-recommended \
