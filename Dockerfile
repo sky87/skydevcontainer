@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   lldb \
   libc++-dev \
   libc++abi-dev \
+  libclang-rt-dev \
   # Python
   python3 \
   python3-venv \
