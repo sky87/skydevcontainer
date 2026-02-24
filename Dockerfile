@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   clang \
   clangd \
   clang-format \
+  llvm \
   lld \
   lldb \
   libc++-dev \
