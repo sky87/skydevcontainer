@@ -26,6 +26,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libc++-dev \
   libc++abi-dev \
   libclang-rt-dev \
+  uncrustify \
   # Python
   python3 \
   python3-venv \
