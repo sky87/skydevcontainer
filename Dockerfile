@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   make \
   cmake \
   ninja-build \
+  bubblewrap \
   pkg-config \
   # C/C++ (clang)
   clang \
