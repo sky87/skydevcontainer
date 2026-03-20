@@ -43,6 +43,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   # Document tools
   pandoc \
   zip \
+  imagemagick \
   # .NET dependencies
   libicu-dev \
   libssl-dev \
@@ -105,6 +106,9 @@ ENV BUN_INSTALL=/opt/bun
 RUN curl -fsSL https://bun.sh/install | bash \
   && chown -R sky:sky /opt/bun
 
+# Install Codex CLI globally via npm
+RUN bash -c "source /opt/nvm/nvm.sh && npm i -g @openai/codex"
+
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ENV PATH="/opt/rust/cargo/bin:$PATH"
@@ -114,7 +118,3 @@ COPY zshrc /etc/zsh/zshrc
 
 USER sky
 WORKDIR /home/sky
-
-RUN cargo install \
-  flamegraph \
-  rustfilt
