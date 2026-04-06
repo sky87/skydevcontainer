@@ -17,8 +17,7 @@ This builds the Docker image tagged as `devcontainer-sky:latest`.
 ## Architecture
 
 - **Dockerfile**: Defines the container with Clang/C++, Rust, Python, Node.js, Bun, .NET, and LaTeX toolchains. All tools are installed to `/opt/` with sky ownership to allow self-updates.
-- **devcontainer.json**: VS Code Dev Container configuration using the published image from `ghcr.io/sky87/skydevcontainer:latest`. Uses a Docker volume (`sky-home`) to persist `/home/sky`.
-- **post-create.sh**: Optional script that runs after container creation to auto-install project dependencies (bun, uv, cargo, dotnet).
+- **example/.devcontainer/**: A ready-to-copy `.devcontainer` directory for new projects. Contains `devcontainer.json` (VS Code Dev Container config using `ghcr.io/sky87/skydevcontainer:latest` with a Docker volume for `/home/sky`) and `post-create.sh` (auto-installs project dependencies via bun, uv, cargo, dotnet).
 - **zshrc**: System zshrc copied to `/etc/zsh/zshrc` that sets up PATH and sources nvm/fzf.
 
 ## Tool Locations

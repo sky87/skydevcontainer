@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   ninja-build \
   bubblewrap \
   pkg-config \
+  openssh-client \
   # C/C++ (clang)
   clang \
   clangd \

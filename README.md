@@ -26,11 +26,15 @@ A VS Code Dev Container with a multi-language development environment based on D
 ./build.sh
 ```
 
-### Open in VS Code
+### Use in a New Project
 
-1. Install the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension
-2. Open this folder in VS Code
-3. Click "Reopen in Container" when prompted
+Copy the `example/.devcontainer` directory to the root of your project:
+
+```bash
+cp -r example/.devcontainer /path/to/your/project/
+```
+
+Then open the project in VS Code with the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension and click "Reopen in Container" when prompted.
 
 ## Configuration
 
@@ -41,7 +45,7 @@ A VS Code Dev Container with a multi-language development environment based on D
 
 ## Automatic Dependency Installation
 
-If you copy `post-create.sh` to your project, dependencies are automatically installed when the container starts:
+The included `post-create.sh` automatically installs dependencies when the container starts:
 
 - **Node.js**: Runs `bun install` if `package.json` exists
 - **Python**: Runs `uv sync` or `uv pip install -r requirements.txt`
