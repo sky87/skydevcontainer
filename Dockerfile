@@ -111,6 +111,9 @@ RUN curl -fsSL https://bun.sh/install | bash \
 # Install Codex CLI globally via npm
 RUN bash -c "source /opt/nvm/nvm.sh && npm i -g @openai/codex"
 
+# Install pi
+RUN bash -c "source /opt/nvm/nvm.sh && npm i -g @mariozechner/pi-coding-agent"
+
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ENV PATH="/opt/rust/cargo/bin:$PATH"

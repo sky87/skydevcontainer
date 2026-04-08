@@ -1,0 +1,24 @@
+{
+  "name": "Dev Container",
+  "image": "ghcr.io/sky87/skydevcontainer:latest",
+  "initializeCommand": "docker pull ghcr.io/sky87/skydevcontainer:latest",
+  "postCreateCommand": "[ -f .devcontainer/post-create.sh ] && bash .devcontainer/post-create.sh || true",
+  "mounts": [
+    "source=sky-home,target=/home/sky,type=volume"
+  ],
+  "remoteUser": "sky",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "llvm-vs-code-extensions.vscode-clangd",
+        "james-yu.latex-workshop",
+        "ms-dotnettools.csdevkit",
+        "oven.bun-vscode",
+        "Anthropic.claude-code"
+      ]
+    }
+  }
+}
