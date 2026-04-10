@@ -80,9 +80,6 @@ RUN mkdir -p /opt/nvm \
   && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash \
   && chown -R sky:sky /opt/nvm
 
-# Install default Node.js via nvm
-RUN bash -c "source /opt/nvm/nvm.sh && nvm install --lts"
-
 # Install fzf from source (latest)
 RUN git clone --depth 1 https://github.com/junegunn/fzf.git /opt/fzf \
   && /opt/fzf/install --bin \
@@ -108,12 +105,6 @@ ENV BUN_INSTALL=/opt/bun
 RUN curl -fsSL https://bun.sh/install | bash \
   && chown -R sky:sky /opt/bun
 
-# Install Codex CLI globally via npm
-RUN bash -c "source /opt/nvm/nvm.sh && npm i -g @openai/codex"
-
-# Install pi
-RUN bash -c "source /opt/nvm/nvm.sh && npm i -g @mariozechner/pi-coding-agent"
-
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ENV PATH="/opt/rust/cargo/bin:$PATH"
@@ -123,3 +114,8 @@ COPY zshrc /etc/zsh/zshrc
 
 USER sky
 WORKDIR /home/sky
+
+# Install Node.js + global npm packages as sky (so sky can upgrade them)
+RUN bash -c "source /opt/nvm/nvm.sh && nvm install --lts"
+RUN bash -c "source /opt/nvm/nvm.sh && npm i -g @openai/codex"
+RUN bash -c "source /opt/nvm/nvm.sh && npm i -g @mariozechner/pi-coding-agent"
