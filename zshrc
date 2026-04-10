@@ -44,7 +44,8 @@ PROMPT='%F{green}%D %*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f%F{8}${VIRTUAL_
 $ '
 
 # Paths
-export PATH="/opt/claude-code/bin:/opt/bun/bin:/opt/dotnet:/opt/fzf/bin:/opt/uv:/opt/rust/cargo/bin:$PATH"
+export PNPM_HOME="/opt/pnpm"
+export PATH="/opt/pnpm:/opt/claude-code/bin:/opt/bun/bin:/opt/dotnet:/opt/fzf/bin:/opt/uv:/opt/rust/cargo/bin:$PATH"
 
 # Add ~/.local/bin to PATH if it exists
 [ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"

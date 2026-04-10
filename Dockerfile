@@ -110,6 +110,10 @@ ENV BUN_INSTALL=/opt/bun
 RUN curl -fsSL https://bun.sh/install | bash \
   && chown -R ${USERNAME}:${GROUPNAME} ${BUN_INSTALL}
 
+# Create pnpm global dir (user-owned for updates)
+ENV PNPM_HOME=/opt/pnpm
+RUN mkdir -p ${PNPM_HOME} && chown -R ${USERNAME}:${GROUPNAME} ${PNPM_HOME}
+
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ENV PATH="${CARGO_HOME}/bin:$PATH"
