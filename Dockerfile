@@ -116,7 +116,7 @@ RUN mkdir -p ${PNPM_HOME} && chown -R ${USERNAME}:${GROUPNAME} ${PNPM_HOME}
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
-ENV PATH="${CARGO_HOME}/bin:$PATH"
+ENV PATH="${PNPM_HOME}:${CARGO_HOME}/bin:$PATH"
 
 # Copy default zshrc to system location
 COPY zshrc /etc/zsh/zshrc
