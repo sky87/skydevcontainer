@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-IMAGE_NAME="devcontainer-sky"
+IMAGE_NAME="devcontainer-dev"
 IMAGE_TAG="latest"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

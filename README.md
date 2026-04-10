@@ -1,13 +1,13 @@
-# Sky Dev Container
+# Dev Container
 
 A VS Code Dev Container with a multi-language development environment based on Debian Trixie.
 
 ## Included Toolchains
 
-- **C/C++**: Clang, clangd, clang-format, lld, lldb, libc++
+- **C/C++**: Clang, clangd, clang-format, lld, lldb, libc++, uncrustify
 - **Rust**: rustup with cargo
 - **Python**: Python 3 with uv package manager
-- **Node.js**: via nvm (LTS version)
+- **Node.js**: via nvm (LTS version) with pnpm via corepack
 - **Bun**: JavaScript/TypeScript runtime and package manager
 - **.NET**: LTS version
 - **LaTeX**: texlive with latexmk
@@ -15,8 +15,10 @@ A VS Code Dev Container with a multi-language development environment based on D
 ## Additional Tools
 
 - Build tools: make, cmake, ninja-build
-- Utilities: git, curl, fzf, zsh
-- AI: Claude Code CLI
+- Utilities: git, curl, fzf, zsh, openssh-client, bubblewrap
+- Documents: pandoc, imagemagick, zip
+- Profiling/coverage: linux-perf, valgrind, lcov
+- AI: Claude Code CLI, Codex CLI, pi
 
 ## Usage
 
@@ -38,9 +40,9 @@ Then open the project in VS Code with the [Dev Containers](https://marketplace.v
 
 ## Configuration
 
-- **User**: `sky` with passwordless sudo
+- **User**: `dev` with passwordless sudo (configurable via `USERNAME` build arg)
 - **Shell**: zsh
-- **Home directory**: Persisted via Docker volume (`sky-home`)
+- **Home directory**: Persisted via Docker volume (`dev-home`)
 - **Image**: Published to `ghcr.io/sky87/skydevcontainer:latest`
 
 ## Automatic Dependency Installation
@@ -62,3 +64,4 @@ The following extensions are automatically installed:
 - LaTeX Workshop
 - C# Dev Kit
 - Bun
+- Claude Code

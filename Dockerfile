@@ -1,4 +1,7 @@
-FROM debian:trixie-slim@sha256:77ba0164de17b88dd0bf6cdc8f65569e6e5fa6cd256562998b62553134a00ef0
+FROM debian:trixie-slim
+
+ARG USERNAME=dev
+ARG GROUPNAME=dev
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -59,63 +62,65 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
 # Create user with passwordless sudo and zsh shell
-RUN useradd -m -s /bin/zsh sky \
-  && echo "sky ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/sky \
-  && chmod 0440 /etc/sudoers.d/sky
+RUN useradd -m -s /bin/zsh ${USERNAME} \
+  && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} \
+  && chmod 0440 /etc/sudoers.d/${USERNAME}
 
-# Install uv to /opt/uv (sky-owned for self-update)
+# Install uv to /opt/uv (user-owned for self-update)
 ENV UV_INSTALL_DIR=/opt/uv
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
-  && chown -R sky:sky /opt/uv
+  && chown -R ${USERNAME}:${GROUPNAME} ${UV_INSTALL_DIR}
 
-# Install Rust to /opt/rust (sky-owned for rustup update)
+# Install Rust to /opt/rust (user-owned for rustup update)
 ENV RUSTUP_HOME=/opt/rust/rustup \
   CARGO_HOME=/opt/rust/cargo
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path \
-  && chown -R sky:sky /opt/rust
+  && chown -R ${USERNAME}:${GROUPNAME} /opt/rust
 
-# Install nvm to /opt/nvm (sky-owned for nvm install/upgrade)
+# Install nvm to /opt/nvm (user-owned for nvm install/upgrade)
 ENV NVM_DIR=/opt/nvm
-RUN mkdir -p /opt/nvm \
+RUN mkdir -p ${NVM_DIR} \
   && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash \
-  && chown -R sky:sky /opt/nvm
+  && chown -R ${USERNAME}:${GROUPNAME} ${NVM_DIR}
 
 # Install fzf from source (latest)
-RUN git clone --depth 1 https://github.com/junegunn/fzf.git /opt/fzf \
-  && /opt/fzf/install --bin \
-  && chown -R sky:sky /opt/fzf
+ENV FZF_HOME=/opt/fzf
+RUN git clone --depth 1 https://github.com/junegunn/fzf.git ${FZF_HOME} \
+  && ${FZF_HOME}/install --bin \
+  && chown -R ${USERNAME}:${GROUPNAME} ${FZF_HOME}
 
-# Install .NET to /opt/dotnet (sky-owned for updates)
+# Install .NET to /opt/dotnet (user-owned for updates)
 ENV DOTNET_ROOT=/opt/dotnet \
   DOTNET_CLI_TELEMETRY_OPTOUT=1
-RUN mkdir -p /opt/dotnet \
-  && curl -fsSL https://dot.net/v1/dotnet-install.sh | bash -s -- --install-dir /opt/dotnet --channel LTS \
-  && chown -R sky:sky /opt/dotnet
+RUN mkdir -p ${DOTNET_ROOT} \
+  && curl -fsSL https://dot.net/v1/dotnet-install.sh | bash -s -- --install-dir ${DOTNET_ROOT} --channel LTS \
+  && chown -R ${USERNAME}:${GROUPNAME} ${DOTNET_ROOT}
 
-# Install Claude Code to /opt/claude-code (sky-owned for updates)
+# Install Claude Code to /opt/claude-code (user-owned for updates)
+ENV CLAUDE_CODE_HOME=/opt/claude-code
 RUN curl -fsSL https://claude.ai/install.sh | bash \
-  && mkdir -p /opt/claude-code/bin \
-  && mv /root/.local/share/claude /opt/claude-code/data \
-  && ln -s "$(ls /opt/claude-code/data/versions/* | head -1)" /opt/claude-code/bin/claude \
+  && mkdir -p ${CLAUDE_CODE_HOME}/bin \
+  && mv /root/.local/share/claude ${CLAUDE_CODE_HOME}/data \
+  && ln -s "$(ls ${CLAUDE_CODE_HOME}/data/versions/* | head -1)" ${CLAUDE_CODE_HOME}/bin/claude \
   && rm -rf /root/.claude /root/.local \
-  && chown -R sky:sky /opt/claude-code
+  && chown -R ${USERNAME}:${GROUPNAME} ${CLAUDE_CODE_HOME}
 
-# Install Bun to /opt/bun (sky-owned for updates)
+# Install Bun to /opt/bun (user-owned for updates)
 ENV BUN_INSTALL=/opt/bun
 RUN curl -fsSL https://bun.sh/install | bash \
-  && chown -R sky:sky /opt/bun
+  && chown -R ${USERNAME}:${GROUPNAME} ${BUN_INSTALL}
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
-ENV PATH="/opt/rust/cargo/bin:$PATH"
+ENV PATH="${CARGO_HOME}/bin:$PATH"
 
 # Copy default zshrc to system location
 COPY zshrc /etc/zsh/zshrc
 
-USER sky
-WORKDIR /home/sky
+USER ${USERNAME}
 
-# Install Node.js + global npm packages as sky (so sky can upgrade them)
-RUN bash -c "source /opt/nvm/nvm.sh && nvm install --lts"
-RUN bash -c "source /opt/nvm/nvm.sh && npm i -g @openai/codex"
-RUN bash -c "source /opt/nvm/nvm.sh && npm i -g @mariozechner/pi-coding-agent"
+# Install Node.js + pnpm + global packages as user (so user can upgrade them)
+RUN bash -c "source ${NVM_DIR}/nvm.sh && nvm install --lts"
+RUN bash -c "source ${NVM_DIR}/nvm.sh && npm i -g pnpm"
+RUN bash -c "source ${NVM_DIR}/nvm.sh && pnpm add -g @openai/codex"
+RUN bash -c "source ${NVM_DIR}/nvm.sh && pnpm add -g @mariozechner/pi-coding-agent"

@@ -4,9 +4,9 @@
   "initializeCommand": "docker pull ghcr.io/sky87/skydevcontainer:latest",
   "postCreateCommand": "[ -f .devcontainer/post-create.sh ] && bash .devcontainer/post-create.sh || true",
   "mounts": [
-    "source=sky-home,target=/home/sky,type=volume"
+    "source=dev-home,target=/home/dev,type=volume"
   ],
-  "remoteUser": "sky",
+  "remoteUser": "dev",
   "customizations": {
     "vscode": {
       "extensions": [
