@@ -7,7 +7,7 @@ A VS Code Dev Container with a multi-language development environment based on D
 - **C/C++**: Clang, clangd, clang-format, lld, lldb, libc++, uncrustify
 - **Rust**: rustup with cargo
 - **Python**: Python 3 with uv package manager
-- **Node.js**: via nvm (LTS version) with pnpm via corepack
+- **Node.js**: via nvm (LTS version) with pnpm
 - **Bun**: JavaScript/TypeScript runtime and package manager
 - **.NET**: LTS version
 - **LaTeX**: texlive with latexmk
