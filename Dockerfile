@@ -69,19 +69,19 @@ RUN useradd -m -s /bin/zsh ${USERNAME} \
 
 # Install uv to /opt/uv (user-owned for self-update)
 ENV UV_INSTALL_DIR=/opt/uv
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
+RUN curl --retry 5 --retry-all-errors --retry-delay 2 -LsSf https://astral.sh/uv/install.sh | sh \
   && chown -R ${USERNAME}:${GROUPNAME} ${UV_INSTALL_DIR}
 
 # Install Rust to /opt/rust (user-owned for rustup update)
 ENV RUSTUP_HOME=/opt/rust/rustup \
   CARGO_HOME=/opt/rust/cargo
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path \
+RUN curl --retry 5 --retry-all-errors --retry-delay 2 --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path \
   && chown -R ${USERNAME}:${GROUPNAME} /opt/rust
 
 # Install nvm to /opt/nvm (user-owned for nvm install/upgrade)
 ENV NVM_DIR=/opt/nvm
 RUN mkdir -p ${NVM_DIR} \
-  && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash \
+  && curl --retry 5 --retry-all-errors --retry-delay 2 -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash \
   && chown -R ${USERNAME}:${GROUPNAME} ${NVM_DIR}
 
 # Install fzf from source (latest)
@@ -94,12 +94,12 @@ RUN git clone --depth 1 https://github.com/junegunn/fzf.git ${FZF_HOME} \
 ENV DOTNET_ROOT=/opt/dotnet \
   DOTNET_CLI_TELEMETRY_OPTOUT=1
 RUN mkdir -p ${DOTNET_ROOT} \
-  && curl -fsSL https://dot.net/v1/dotnet-install.sh | bash -s -- --install-dir ${DOTNET_ROOT} --channel LTS \
+  && curl --retry 5 --retry-all-errors --retry-delay 2 -fsSL https://dot.net/v1/dotnet-install.sh | bash -s -- --install-dir ${DOTNET_ROOT} --channel LTS \
   && chown -R ${USERNAME}:${GROUPNAME} ${DOTNET_ROOT}
 
 # Install Claude Code to /opt/claude-code (user-owned for updates)
 ENV CLAUDE_CODE_HOME=/opt/claude-code
-RUN curl -fsSL https://claude.ai/install.sh | bash \
+RUN curl --retry 5 --retry-all-errors --retry-delay 2 -fsSL https://claude.ai/install.sh | bash \
   && mkdir -p ${CLAUDE_CODE_HOME}/bin \
   && mv /root/.local/share/claude ${CLAUDE_CODE_HOME}/data \
   && ln -s "$(ls ${CLAUDE_CODE_HOME}/data/versions/* | head -1)" ${CLAUDE_CODE_HOME}/bin/claude \
@@ -108,7 +108,7 @@ RUN curl -fsSL https://claude.ai/install.sh | bash \
 
 # Install Bun to /opt/bun (user-owned for updates)
 ENV BUN_INSTALL=/opt/bun
-RUN curl -fsSL https://bun.sh/install | bash \
+RUN curl --retry 5 --retry-all-errors --retry-delay 2 -fsSL https://bun.sh/install | bash \
   && chown -R ${USERNAME}:${GROUPNAME} ${BUN_INSTALL}
 
 # Create pnpm global dir (user-owned for updates)
