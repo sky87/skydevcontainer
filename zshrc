@@ -45,7 +45,7 @@ $ '
 
 # Paths
 export PNPM_HOME="/opt/pnpm"
-export PATH="/opt/pnpm:/opt/claude-code/bin:/opt/bun/bin:/opt/dotnet:/opt/fzf/bin:/opt/uv:/opt/rust/cargo/bin:$PATH"
+export PATH="/opt/pnpm/bin:/opt/pnpm:/opt/claude-code/bin:/opt/bun/bin:/opt/dotnet:/opt/fzf/bin:/opt/uv:/opt/rust/cargo/bin:$PATH"
 
 # Add ~/.local/bin to PATH if it exists
 [ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"

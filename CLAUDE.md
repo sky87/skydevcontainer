@@ -27,6 +27,7 @@ This builds the Docker image tagged as `devcontainer-dev:latest`.
 | Rust/Cargo | `/opt/rust/cargo/bin` |
 | uv (Python) | `/opt/uv` |
 | nvm/Node.js | `/opt/nvm` |
+| pnpm global binaries | `/opt/pnpm/bin` |
 | .NET | `/opt/dotnet` |
 | fzf | `/opt/fzf` |
 | Claude Code | `/opt/claude-code` |
