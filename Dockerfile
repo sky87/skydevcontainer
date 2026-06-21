@@ -128,4 +128,4 @@ USER ${USERNAME}
 RUN bash -c "source ${NVM_DIR}/nvm.sh && nvm install --lts"
 RUN bash -c "source ${NVM_DIR}/nvm.sh && npm i -g pnpm"
 RUN bash -c "source ${NVM_DIR}/nvm.sh && pnpm add -g @openai/codex"
-RUN bash -c "source ${NVM_DIR}/nvm.sh && pnpm add -g @mariozechner/pi-coding-agent"
+RUN bash -c "source ${NVM_DIR}/nvm.sh && pnpm add -g --ignore-scripts @earendil-works/pi-coding-agent"
