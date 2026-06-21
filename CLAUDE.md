@@ -14,6 +14,8 @@ This is a VS Code Dev Container configuration that creates a multi-language deve
 
 This builds the Docker image tagged as `devcontainer-dev:latest`.
 
+Do not run Docker image builds locally when troubleshooting CI failures. Commit and push the fix, then use the GitHub Actions build as the validation check.
+
 ## Architecture
 
 - **Dockerfile**: Defines the container with Clang/C++, Rust, Python, Node.js, Bun, .NET, and LaTeX toolchains. All tools are installed to `/opt/` with user ownership to allow self-updates. Node.js and global npm packages (Codex CLI, pi) are installed as the container user so they can be upgraded without sudo. The username/groupname are configurable via `USERNAME`/`GROUPNAME` build args (default: `dev`).
