@@ -57,10 +57,18 @@ load_nvm() {
 
 link_node_commands() {
   mkdir -p "${LOCAL_BIN}"
-  local command_name command_path
+  local command_name command_path node_path node_version_dir
+  node_path=$(nvm which default)
+  node_version_dir=${node_path%/bin/node}
+
+  # Keep the public command links stable when nvm installs a newer Node version.
+  # Only this pointer needs to change; ~/.local/bin never points at a versioned
+  # directory that may later be removed.
+  ln -sfnT "${node_version_dir}" "${NVM_DIR}/current"
+
   for command_name in node npm npx pnpm pnpx; do
-    command_path=$(command -v "${command_name}" 2>/dev/null || true)
-    if [[ -n "${command_path}" ]]; then
+    command_path="${NVM_DIR}/current/bin/${command_name}"
+    if [[ -x "${command_path}" ]]; then
       ln -sfn "${command_path}" "${LOCAL_BIN}/${command_name}"
     fi
   done
