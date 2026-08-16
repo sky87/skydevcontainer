@@ -15,10 +15,35 @@ A VS Code Dev Container with a multi-language development environment based on D
 ## Additional Tools
 
 - Build tools: make, cmake, ninja-build
-- Utilities: git, curl, fzf, zsh, openssh-client, bubblewrap
+- Utilities: git, curl, fzf, Neovim, tmux, zsh, openssh-client, bubblewrap
 - Documents: pandoc, imagemagick, zip
 - Profiling/coverage: linux-perf, valgrind, lcov
 - AI: Claude Code CLI, Codex CLI, pi
+
+## Persistent Developer Tools
+
+Frequently updated runtimes and CLI tools are installed into the `dev` user's
+home directory by `sky-tools`. The example configuration mounts that home as a
+named Docker volume, so updates survive container recreation and are shared by
+projects using the same volume.
+
+The first container creation installs any missing tools. Existing tools are not
+updated automatically:
+
+```bash
+sky-tools ensure
+```
+
+Update every managed tool explicitly or inspect the installed versions:
+
+```bash
+sky-tools update
+sky-tools status
+```
+
+`sky-tools` manages uv, Rust, nvm/Node.js, pnpm, Bun, .NET, fzf, Claude Code,
+Codex, and pi. Operating-system packages and native libraries remain part of
+the container image.
 
 ## Usage
 

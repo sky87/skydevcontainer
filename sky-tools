@@ -1,0 +1,267 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly NVM_INSTALL_VERSION="${SKY_TOOLS_NVM_VERSION:-v0.40.1}"
+readonly NVM_DIR="${HOME}/.nvm"
+readonly RUSTUP_HOME="${HOME}/.rustup"
+readonly CARGO_HOME="${HOME}/.cargo"
+readonly BUN_INSTALL="${HOME}/.bun"
+readonly DOTNET_ROOT="${HOME}/.dotnet"
+readonly FZF_HOME="${HOME}/.fzf"
+readonly PNPM_HOME="${HOME}/.local/share/pnpm"
+readonly LOCAL_BIN="${HOME}/.local/bin"
+readonly STATE_DIR="${XDG_STATE_HOME:-${HOME}/.local/state}/sky-tools"
+
+export NVM_DIR RUSTUP_HOME CARGO_HOME BUN_INSTALL DOTNET_ROOT FZF_HOME PNPM_HOME
+export UV_INSTALL_DIR="${LOCAL_BIN}"
+export UV_NO_MODIFY_PATH=1
+export DOTNET_CLI_TELEMETRY_OPTOUT=1
+export PATH="${LOCAL_BIN}:${PNPM_HOME}/bin:${PNPM_HOME}:${CARGO_HOME}/bin:${BUN_INSTALL}/bin:${DOTNET_ROOT}:${FZF_HOME}/bin:${PATH}"
+
+usage() {
+  cat <<'EOF'
+usage: sky-tools <command>
+
+Commands:
+  ensure  Install missing developer tools without updating existing ones
+  update  Install missing tools, then update all managed tools
+  status  Show installed tool versions
+EOF
+}
+
+log() {
+  printf 'sky-tools: %s\n' "$*"
+}
+
+download_to_stdout() {
+  curl --retry 5 --retry-all-errors --retry-delay 2 -fsSL "$1"
+}
+
+with_lock() {
+  mkdir -p "${STATE_DIR}"
+  exec 9>"${STATE_DIR}/lock"
+  if command -v flock >/dev/null 2>&1; then
+    flock 9
+  fi
+  "$@"
+}
+
+load_nvm() {
+  if [[ -s "${NVM_DIR}/nvm.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NVM_DIR}/nvm.sh"
+    return 0
+  fi
+  return 1
+}
+
+link_node_commands() {
+  mkdir -p "${LOCAL_BIN}"
+  local command_name command_path
+  for command_name in node npm npx pnpm pnpx; do
+    command_path=$(command -v "${command_name}" 2>/dev/null || true)
+    if [[ -n "${command_path}" ]]; then
+      ln -sfn "${command_path}" "${LOCAL_BIN}/${command_name}"
+    fi
+  done
+}
+
+ensure_uv() {
+  if [[ ! -x "${LOCAL_BIN}/uv" ]]; then
+    log "installing uv"
+    download_to_stdout https://astral.sh/uv/install.sh | sh
+  fi
+}
+
+ensure_rust() {
+  if [[ ! -x "${CARGO_HOME}/bin/rustup" ]]; then
+    log "installing Rust"
+    download_to_stdout https://sh.rustup.rs | sh -s -- -y --no-modify-path
+  fi
+}
+
+ensure_node() {
+  if [[ ! -s "${NVM_DIR}/nvm.sh" ]]; then
+    log "installing nvm ${NVM_INSTALL_VERSION}"
+    mkdir -p "${NVM_DIR}"
+    PROFILE=/dev/null download_to_stdout \
+      "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_INSTALL_VERSION}/install.sh" | \
+      PROFILE=/dev/null bash
+  fi
+  load_nvm
+  if [[ "$(nvm version 'lts/*')" == "N/A" ]]; then
+    log "installing Node.js LTS"
+    nvm install --lts
+  fi
+  nvm alias default 'lts/*' >/dev/null
+  nvm use --silent default
+  if ! command -v pnpm >/dev/null 2>&1; then
+    log "installing pnpm"
+    npm install --global pnpm
+  fi
+  link_node_commands
+}
+
+ensure_bun() {
+  if [[ ! -x "${BUN_INSTALL}/bin/bun" ]]; then
+    log "installing Bun"
+    download_to_stdout https://bun.sh/install | bash
+  fi
+}
+
+install_dotnet_lts() {
+  local installer
+  installer=$(mktemp)
+  download_to_stdout https://dot.net/v1/dotnet-install.sh > "${installer}"
+  bash "${installer}" --install-dir "${DOTNET_ROOT}" --channel LTS
+  rm -f "${installer}"
+}
+
+ensure_dotnet() {
+  if [[ ! -x "${DOTNET_ROOT}/dotnet" ]]; then
+    log "installing .NET LTS"
+    mkdir -p "${DOTNET_ROOT}"
+    install_dotnet_lts
+  fi
+}
+
+ensure_fzf() {
+  if [[ ! -x "${FZF_HOME}/bin/fzf" ]]; then
+    log "installing fzf"
+    if [[ ! -d "${FZF_HOME}/.git" ]]; then
+      git clone --depth 1 https://github.com/junegunn/fzf.git "${FZF_HOME}"
+    fi
+    "${FZF_HOME}/install" --bin
+  fi
+}
+
+ensure_claude() {
+  if [[ ! -x "${LOCAL_BIN}/claude" ]]; then
+    log "installing Claude Code"
+    download_to_stdout https://claude.ai/install.sh | bash
+  fi
+}
+
+ensure_codex() {
+  if [[ ! -x "${LOCAL_BIN}/codex" ]]; then
+    log "installing Codex"
+    download_to_stdout https://chatgpt.com/codex/install.sh | sh
+  fi
+}
+
+ensure_pi() {
+  if [[ ! -x "${PNPM_HOME}/bin/pi" && ! -x "${PNPM_HOME}/pi" ]]; then
+    log "installing pi"
+    mkdir -p "${PNPM_HOME}/bin"
+    pnpm add --global --ignore-scripts @earendil-works/pi-coding-agent
+  fi
+}
+
+ensure_all() {
+  mkdir -p "${LOCAL_BIN}"
+  ensure_uv
+  ensure_rust
+  ensure_node
+  ensure_bun
+  ensure_dotnet
+  ensure_fzf
+  ensure_claude
+  ensure_codex
+  ensure_pi
+  log "all tools are available"
+}
+
+update_all() {
+  ensure_all
+
+  log "updating uv"
+  "${LOCAL_BIN}/uv" self update
+
+  log "updating Rust"
+  "${CARGO_HOME}/bin/rustup" update
+
+  log "updating Node.js LTS, npm, and pnpm"
+  load_nvm
+  nvm install --lts --latest-npm
+  nvm alias default 'lts/*' >/dev/null
+  nvm use --silent default
+  npm install --global pnpm@latest
+  link_node_commands
+
+  log "updating Bun"
+  "${BUN_INSTALL}/bin/bun" upgrade
+
+  log "updating .NET LTS"
+  install_dotnet_lts
+
+  log "updating fzf"
+  git -C "${FZF_HOME}" pull --ff-only
+  "${FZF_HOME}/install" --bin
+
+  log "updating Claude Code"
+  "${LOCAL_BIN}/claude" update
+
+  log "updating Codex"
+  download_to_stdout https://chatgpt.com/codex/install.sh | sh
+
+  log "updating pi"
+  pnpm add --global --ignore-scripts @earendil-works/pi-coding-agent@latest
+
+  log "all tools are up to date"
+}
+
+version_line() {
+  local label="$1"
+  shift
+  local output
+  if output=$("$@" 2>&1); then
+    output=${output%%$'\n'*}
+  else
+    output="not installed"
+  fi
+  printf '%-12s %s\n' "${label}" "${output}"
+}
+
+show_status() {
+  if load_nvm; then
+    nvm use --silent default >/dev/null 2>&1 || true
+  fi
+  version_line uv "${LOCAL_BIN}/uv" --version
+  version_line rust "${CARGO_HOME}/bin/rustc" --version
+  version_line rustup "${CARGO_HOME}/bin/rustup" --version
+  version_line nvm nvm --version
+  version_line node node --version
+  version_line npm npm --version
+  version_line pnpm pnpm --version
+  version_line bun "${BUN_INSTALL}/bin/bun" --version
+  version_line dotnet "${DOTNET_ROOT}/dotnet" --version
+  version_line fzf "${FZF_HOME}/bin/fzf" --version
+  version_line claude "${LOCAL_BIN}/claude" --version
+  version_line codex "${LOCAL_BIN}/codex" --version
+  version_line pi pi --version
+}
+
+case "${1:-}" in
+  ensure)
+    shift
+    (( $# == 0 )) || { usage >&2; exit 2; }
+    with_lock ensure_all
+    ;;
+  update)
+    shift
+    (( $# == 0 )) || { usage >&2; exit 2; }
+    with_lock update_all
+    ;;
+  status)
+    shift
+    (( $# == 0 )) || { usage >&2; exit 2; }
+    show_status
+    ;;
+  -h|--help|help)
+    usage
+    ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac

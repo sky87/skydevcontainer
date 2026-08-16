@@ -44,23 +44,20 @@ PROMPT='%F{green}%D %*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f%F{8}${VIRTUAL_
 $ '
 
 # Paths
-export PNPM_HOME="/opt/pnpm"
-export PATH="/opt/pnpm/bin:/opt/pnpm:/opt/claude-code/bin:/opt/bun/bin:/opt/dotnet:/opt/fzf/bin:/opt/uv:/opt/rust/cargo/bin:$PATH"
-
-# Add ~/.local/bin to PATH if it exists
-[ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
+export PNPM_HOME="$HOME/.local/share/pnpm"
+export PATH="$HOME/.local/bin:$PNPM_HOME/bin:$PNPM_HOME:$HOME/.cargo/bin:$HOME/.bun/bin:$HOME/.dotnet:$HOME/.fzf/bin:$PATH"
 
 
 # .NET
-export DOTNET_ROOT="/opt/dotnet"
+export DOTNET_ROOT="$HOME/.dotnet"
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
 
 # nvm
-export NVM_DIR="/opt/nvm"
+export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
 # fzf
-source <(fzf --zsh)
+command -v fzf >/dev/null 2>&1 && source <(fzf --zsh)
 
 # Aliases
 
