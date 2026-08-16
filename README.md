@@ -17,7 +17,7 @@ A VS Code Dev Container with a multi-language development environment based on D
 ## Additional Tools
 
 - Build tools: make, cmake, ninja-build
-- Utilities: git, curl, fzf, Neovim, tmux, zsh, openssh-client, bubblewrap
+- Utilities: git, GitHub CLI (`gh`), curl, fzf, Neovim, tmux, zsh, openssh-client, bubblewrap
 - Documents: pandoc, imagemagick, zip
 - Profiling/coverage: linux-perf, valgrind, lcov
 - AI: Claude Code CLI, Codex CLI, pi
@@ -43,11 +43,13 @@ sky-tools update
 sky-tools status
 ```
 
-`sky-tools` manages uv, Rust, nvm/Node.js, pnpm, Bun, .NET, fzf, opam/OCaml,
-elan/Lean 4, Claude Code, Codex, and pi. Operating-system packages and native
-libraries remain part of the container image. Opam package sandboxing is
-disabled because unprivileged user namespaces are unavailable inside the
-container; Docker provides the outer isolation boundary.
+`sky-tools` manages uv, Rust, nvm/Node.js, pnpm, Bun, .NET, fzf, GitHub CLI,
+opam/OCaml, elan/Lean 4, Claude Code, Codex, and pi. Operating-system packages
+and native libraries remain part of the container image. Downloaded GitHub CLI
+archives are verified against the checksum published with each GitHub release.
+Opam package sandboxing is disabled because unprivileged user namespaces are
+unavailable inside the container; Docker provides the outer isolation
+boundary.
 
 ## Usage
 

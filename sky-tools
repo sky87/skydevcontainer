@@ -35,6 +35,16 @@ log() {
   printf 'sky-tools: %s\n' "$*"
 }
 
+ensure_managed_tool() {
+  local label started_at
+  label="$1"
+  shift
+  started_at=${SECONDS}
+  log "checking ${label}"
+  "$@"
+  log "${label} is available ($((SECONDS - started_at))s)"
+}
+
 download_to_stdout() {
   curl --retry 5 --retry-all-errors --retry-delay 2 -fsSL "$1"
 }
@@ -145,6 +155,84 @@ ensure_fzf() {
   fi
 }
 
+github_cli_architecture() {
+  case "$(uname -m)" in
+    x86_64|amd64)
+      printf 'amd64\n'
+      ;;
+    aarch64|arm64)
+      printf 'arm64\n'
+      ;;
+    *)
+      echo "sky-tools: GitHub CLI does not support architecture $(uname -m)" >&2
+      return 1
+      ;;
+  esac
+}
+
+latest_github_cli_version() {
+  local version
+  version=$(download_to_stdout https://api.github.com/repos/cli/cli/releases/latest | jq -r '.tag_name // empty')
+  version=${version#v}
+  if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "sky-tools: could not determine the latest GitHub CLI version" >&2
+    return 1
+  fi
+  printf '%s\n' "${version}"
+}
+
+installed_github_cli_version() {
+  "${LOCAL_BIN}/gh" --version | awk 'NR == 1 { print $3 }'
+}
+
+install_github_cli_version() {
+  local architecture archive checksums expected_checksum release_url temp_dir version
+  version="$1"
+  architecture=$(github_cli_architecture)
+  archive="gh_${version}_linux_${architecture}.tar.gz"
+  checksums="gh_${version}_checksums.txt"
+  release_url="https://github.com/cli/cli/releases/download/v${version}"
+  mkdir -p "${LOCAL_BIN}"
+  temp_dir=$(mktemp -d)
+
+  (
+    trap 'rm -rf "${temp_dir}"' EXIT
+    download_to_stdout "${release_url}/${archive}" > "${temp_dir}/${archive}"
+    download_to_stdout "${release_url}/${checksums}" > "${temp_dir}/${checksums}"
+
+    expected_checksum=$(awk -v archive="${archive}" '$2 == archive { print $1 }' "${temp_dir}/${checksums}")
+    if [[ ! "${expected_checksum}" =~ ^[0-9a-f]{64}$ ]]; then
+      echo "sky-tools: GitHub CLI release does not contain a checksum for ${archive}" >&2
+      return 1
+    fi
+    printf '%s  %s\n' "${expected_checksum}" "${temp_dir}/${archive}" | sha256sum --check --status
+
+    tar -xzf "${temp_dir}/${archive}" -C "${temp_dir}"
+    install -m 0755 \
+      "${temp_dir}/gh_${version}_linux_${architecture}/bin/gh" \
+      "${LOCAL_BIN}/gh"
+  )
+}
+
+ensure_github_cli() {
+  if [[ ! -x "${LOCAL_BIN}/gh" ]]; then
+    local version
+    version=$(latest_github_cli_version)
+    log "installing GitHub CLI ${version}"
+    install_github_cli_version "${version}"
+  fi
+}
+
+update_github_cli() {
+  local installed_version latest_version
+  installed_version=$(installed_github_cli_version)
+  latest_version=$(latest_github_cli_version)
+  if [[ "${installed_version}" != "${latest_version}" ]]; then
+    log "updating GitHub CLI ${installed_version} -> ${latest_version}"
+    install_github_cli_version "${latest_version}"
+  fi
+}
+
 install_opam() {
   local installer
   installer=$(mktemp)
@@ -241,17 +329,18 @@ ensure_pi() {
 
 ensure_all() {
   mkdir -p "${LOCAL_BIN}"
-  ensure_uv
-  ensure_rust
-  ensure_node
-  ensure_bun
-  ensure_dotnet
-  ensure_fzf
-  ensure_opam
-  ensure_elan
-  ensure_claude
-  ensure_codex
-  ensure_pi
+  ensure_managed_tool uv ensure_uv
+  ensure_managed_tool Rust ensure_rust
+  ensure_managed_tool Node.js ensure_node
+  ensure_managed_tool Bun ensure_bun
+  ensure_managed_tool .NET ensure_dotnet
+  ensure_managed_tool fzf ensure_fzf
+  ensure_managed_tool "GitHub CLI" ensure_github_cli
+  ensure_managed_tool opam/OCaml ensure_opam
+  ensure_managed_tool "Lean 4" ensure_elan
+  ensure_managed_tool "Claude Code" ensure_claude
+  ensure_managed_tool Codex ensure_codex
+  ensure_managed_tool pi ensure_pi
   log "all tools are available"
 }
 
@@ -281,6 +370,8 @@ update_all() {
   log "updating fzf"
   git -C "${FZF_HOME}" pull --ff-only
   "${FZF_HOME}/install" --bin
+
+  update_github_cli
 
   log "updating opam and OCaml packages"
   install_opam
@@ -350,6 +441,7 @@ show_status() {
   version_line bun "${BUN_INSTALL}/bin/bun" --version
   version_line dotnet "${DOTNET_ROOT}/dotnet" --version
   version_line fzf "${FZF_HOME}/bin/fzf" --version
+  version_line gh "${LOCAL_BIN}/gh" --version
   version_line opam "${LOCAL_BIN}/opam" --version
   version_line ocaml ocaml_version
   version_line elan "${ELAN_HOME}/bin/elan" --version
