@@ -10,6 +10,8 @@ A VS Code Dev Container with a multi-language development environment based on D
 - **Node.js**: via nvm (LTS version) with pnpm
 - **Bun**: JavaScript/TypeScript runtime and package manager
 - **.NET**: LTS version
+- **OCaml**: latest stable compiler via opam
+- **Lean 4**: stable release channel via elan
 - **LaTeX**: texlive with latexmk
 
 ## Additional Tools
@@ -41,9 +43,11 @@ sky-tools update
 sky-tools status
 ```
 
-`sky-tools` manages uv, Rust, nvm/Node.js, pnpm, Bun, .NET, fzf, Claude Code,
-Codex, and pi. Operating-system packages and native libraries remain part of
-the container image.
+`sky-tools` manages uv, Rust, nvm/Node.js, pnpm, Bun, .NET, fzf, opam/OCaml,
+elan/Lean 4, Claude Code, Codex, and pi. Operating-system packages and native
+libraries remain part of the container image. Opam package sandboxing is
+disabled because unprivileged user namespaces are unavailable inside the
+container; Docker provides the outer isolation boundary.
 
 ## Usage
 

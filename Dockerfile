@@ -22,9 +22,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   build-essential \
   make \
   cmake \
+  m4 \
   ninja-build \
   bubblewrap \
   pkg-config \
+  rsync \
   openssh-client \
   # C/C++ (clang)
   clang \
@@ -83,11 +85,13 @@ ENV UV_INSTALL_DIR=${HOME}/.local/bin \
   BUN_INSTALL=${HOME}/.bun \
   DOTNET_ROOT=${HOME}/.dotnet \
   FZF_HOME=${HOME}/.fzf \
+  OPAMROOT=${HOME}/.opam \
+  ELAN_HOME=${HOME}/.elan \
   PNPM_HOME=${HOME}/.local/share/pnpm \
   DOTNET_CLI_TELEMETRY_OPTOUT=1 \
   LC_ALL=C.UTF-8 \
   LANG=C.UTF-8
-ENV PATH="${HOME}/.local/bin:${PNPM_HOME}/bin:${PNPM_HOME}:${CARGO_HOME}/bin:${BUN_INSTALL}/bin:${DOTNET_ROOT}:${FZF_HOME}/bin:${PATH}"
+ENV PATH="${HOME}/.local/bin:${PNPM_HOME}/bin:${PNPM_HOME}:${CARGO_HOME}/bin:${BUN_INSTALL}/bin:${DOTNET_ROOT}:${FZF_HOME}/bin:${OPAMROOT}/default/bin:${ELAN_HOME}/bin:${PATH}"
 
 # Install the persistent tool manager and default shell configuration.
 COPY --chmod=0755 sky-tools /usr/local/bin/sky-tools

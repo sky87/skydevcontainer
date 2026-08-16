@@ -8,15 +8,17 @@ readonly CARGO_HOME="${HOME}/.cargo"
 readonly BUN_INSTALL="${HOME}/.bun"
 readonly DOTNET_ROOT="${HOME}/.dotnet"
 readonly FZF_HOME="${HOME}/.fzf"
+readonly OPAMROOT="${HOME}/.opam"
+readonly ELAN_HOME="${HOME}/.elan"
 readonly PNPM_HOME="${HOME}/.local/share/pnpm"
 readonly LOCAL_BIN="${HOME}/.local/bin"
 readonly STATE_DIR="${XDG_STATE_HOME:-${HOME}/.local/state}/sky-tools"
 
-export NVM_DIR RUSTUP_HOME CARGO_HOME BUN_INSTALL DOTNET_ROOT FZF_HOME PNPM_HOME
+export NVM_DIR RUSTUP_HOME CARGO_HOME BUN_INSTALL DOTNET_ROOT FZF_HOME OPAMROOT ELAN_HOME PNPM_HOME
 export UV_INSTALL_DIR="${LOCAL_BIN}"
 export UV_NO_MODIFY_PATH=1
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
-export PATH="${LOCAL_BIN}:${PNPM_HOME}/bin:${PNPM_HOME}:${CARGO_HOME}/bin:${BUN_INSTALL}/bin:${DOTNET_ROOT}:${FZF_HOME}/bin:${PATH}"
+export PATH="${LOCAL_BIN}:${PNPM_HOME}/bin:${PNPM_HOME}:${CARGO_HOME}/bin:${BUN_INSTALL}/bin:${DOTNET_ROOT}:${FZF_HOME}/bin:${OPAMROOT}/default/bin:${ELAN_HOME}/bin:${PATH}"
 
 usage() {
   cat <<'EOF'
@@ -143,6 +145,78 @@ ensure_fzf() {
   fi
 }
 
+install_opam() {
+  local installer
+  installer=$(mktemp)
+  if ! download_to_stdout https://opam.ocaml.org/install.sh > "${installer}"; then
+    rm -f "${installer}"
+    return 1
+  fi
+  if ! printf '%s\n' "${LOCAL_BIN}" | sh "${installer}" --no-backup; then
+    rm -f "${installer}"
+    return 1
+  fi
+  rm -f "${installer}"
+}
+
+latest_ocaml_compiler() {
+  local version
+  version=$(
+    "${LOCAL_BIN}/opam" show \
+      ocaml-base-compiler \
+      --all-versions \
+      --field=version | \
+      grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | \
+      sort -V | \
+      tail -n 1
+  )
+  if [[ -z "${version}" ]]; then
+    echo "sky-tools: no stable OCaml compiler is available" >&2
+    return 1
+  fi
+  printf 'ocaml-base-compiler.%s\n' "${version}"
+}
+
+ensure_opam() {
+  if [[ ! -x "${LOCAL_BIN}/opam" ]]; then
+    log "installing opam"
+    install_opam
+  fi
+  if [[ ! -f "${OPAMROOT}/config" ]]; then
+    log "initializing opam"
+    "${LOCAL_BIN}/opam" init \
+      --bare \
+      --disable-sandboxing \
+      --enable-shell-hook \
+      --no-setup \
+      --shell=zsh \
+      --yes
+  fi
+  if ! "${LOCAL_BIN}/opam" switch list --short | grep -qx default; then
+    log "installing OCaml"
+    local compiler
+    compiler=$(latest_ocaml_compiler)
+    "${LOCAL_BIN}/opam" switch create \
+      default \
+      "${compiler}" \
+      --yes
+  fi
+}
+
+ensure_elan() {
+  if [[ ! -x "${ELAN_HOME}/bin/elan" ]]; then
+    log "installing elan and Lean 4 stable"
+    download_to_stdout https://elan.lean-lang.org/elan-init.sh | \
+      sh -s -- \
+        -y \
+        --no-modify-path \
+        --default-toolchain leanprover/lean4:stable
+  elif ! (cd "${HOME}" && "${ELAN_HOME}/bin/lean" --version >/dev/null 2>&1); then
+    log "installing Lean 4 stable"
+    "${ELAN_HOME}/bin/elan" default leanprover/lean4:stable
+  fi
+}
+
 ensure_claude() {
   if [[ ! -x "${LOCAL_BIN}/claude" ]]; then
     log "installing Claude Code"
@@ -173,6 +247,8 @@ ensure_all() {
   ensure_bun
   ensure_dotnet
   ensure_fzf
+  ensure_opam
+  ensure_elan
   ensure_claude
   ensure_codex
   ensure_pi
@@ -206,6 +282,28 @@ update_all() {
   git -C "${FZF_HOME}" pull --ff-only
   "${FZF_HOME}/install" --bin
 
+  log "updating opam and OCaml packages"
+  install_opam
+  "${LOCAL_BIN}/opam" init \
+    --disable-sandboxing \
+    --enable-shell-hook \
+    --no-setup \
+    --reinit \
+    --shell=zsh \
+    --yes
+  "${LOCAL_BIN}/opam" update --yes
+  local compiler
+  compiler=$(latest_ocaml_compiler)
+  "${LOCAL_BIN}/opam" switch set-invariant \
+    --switch=default \
+    "${compiler}" \
+    --yes
+  "${LOCAL_BIN}/opam" upgrade --switch=default --yes
+
+  log "updating elan and Lean 4 stable"
+  "${ELAN_HOME}/bin/elan" self update
+  "${ELAN_HOME}/bin/elan" default leanprover/lean4:stable
+
   log "updating Claude Code"
   "${LOCAL_BIN}/claude" update
 
@@ -230,6 +328,14 @@ version_line() {
   printf '%-12s %s\n' "${label}" "${output}"
 }
 
+ocaml_version() {
+  "${LOCAL_BIN}/opam" exec --switch=default -- ocaml -version
+}
+
+lean_version() {
+  (cd "${HOME}" && "${ELAN_HOME}/bin/lean" --version)
+}
+
 show_status() {
   if load_nvm; then
     nvm use --silent default >/dev/null 2>&1 || true
@@ -244,6 +350,10 @@ show_status() {
   version_line bun "${BUN_INSTALL}/bin/bun" --version
   version_line dotnet "${DOTNET_ROOT}/dotnet" --version
   version_line fzf "${FZF_HOME}/bin/fzf" --version
+  version_line opam "${LOCAL_BIN}/opam" --version
+  version_line ocaml ocaml_version
+  version_line elan "${ELAN_HOME}/bin/elan" --version
+  version_line lean lean_version
   version_line claude "${LOCAL_BIN}/claude" --version
   version_line codex "${LOCAL_BIN}/codex" --version
   version_line pi pi --version
