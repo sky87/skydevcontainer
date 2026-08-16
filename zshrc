@@ -1,3 +1,4 @@
+HISTFILE="$HOME/.zsh_history"
 HISTSIZE=999999999
 SAVEHIST=$HISTSIZE
 setopt INC_APPEND_HISTORY   # save immediately
