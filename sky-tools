@@ -2,11 +2,14 @@
 set -euo pipefail
 
 readonly NVM_INSTALL_VERSION="${SKY_TOOLS_NVM_VERSION:-v0.40.1}"
+readonly CORRETTO_VERSION="${SKY_TOOLS_CORRETTO_VERSION:-25}"
 readonly NVM_DIR="${HOME}/.nvm"
 readonly RUSTUP_HOME="${HOME}/.rustup"
 readonly CARGO_HOME="${HOME}/.cargo"
 readonly BUN_INSTALL="${HOME}/.bun"
 readonly DOTNET_ROOT="${HOME}/.dotnet"
+readonly GO_INSTALL_ROOT="${HOME}/.go"
+readonly JDK_INSTALL_ROOT="${HOME}/.jdk"
 readonly FZF_HOME="${HOME}/.fzf"
 readonly OPAMROOT="${HOME}/.opam"
 readonly ELAN_HOME="${HOME}/.elan"
@@ -15,10 +18,13 @@ readonly LOCAL_BIN="${HOME}/.local/bin"
 readonly STATE_DIR="${XDG_STATE_HOME:-${HOME}/.local/state}/sky-tools"
 
 export NVM_DIR RUSTUP_HOME CARGO_HOME BUN_INSTALL DOTNET_ROOT FZF_HOME OPAMROOT ELAN_HOME PNPM_HOME
+export GOROOT="${GO_INSTALL_ROOT}/current"
+export GOPATH="${HOME}/go"
+export JAVA_HOME="${JDK_INSTALL_ROOT}/current"
 export UV_INSTALL_DIR="${LOCAL_BIN}"
 export UV_NO_MODIFY_PATH=1
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
-export PATH="${LOCAL_BIN}:${PNPM_HOME}/bin:${PNPM_HOME}:${CARGO_HOME}/bin:${BUN_INSTALL}/bin:${DOTNET_ROOT}:${FZF_HOME}/bin:${OPAMROOT}/default/bin:${ELAN_HOME}/bin:${PATH}"
+export PATH="${LOCAL_BIN}:${PNPM_HOME}/bin:${PNPM_HOME}:${CARGO_HOME}/bin:${BUN_INSTALL}/bin:${DOTNET_ROOT}:${GOROOT}/bin:${GOPATH}/bin:${JAVA_HOME}/bin:${FZF_HOME}/bin:${OPAMROOT}/default/bin:${ELAN_HOME}/bin:${PATH}"
 
 usage() {
   cat <<'EOF'
@@ -142,6 +148,187 @@ ensure_dotnet() {
     log "installing .NET LTS"
     mkdir -p "${DOTNET_ROOT}"
     install_dotnet_lts
+  fi
+}
+
+go_architecture() {
+  case "$(uname -m)" in
+    x86_64|amd64)
+      printf 'amd64\n'
+      ;;
+    aarch64|arm64)
+      printf 'arm64\n'
+      ;;
+    *)
+      echo "sky-tools: Go does not support architecture $(uname -m) in this container" >&2
+      return 1
+      ;;
+  esac
+}
+
+latest_go_asset() {
+  local architecture archive asset checksum release
+  architecture=$(go_architecture)
+  asset=$(
+    download_to_stdout 'https://go.dev/dl/?mode=json' | jq -er --arg architecture "${architecture}" '
+      [
+        .[]
+        | select(.stable)
+        | . as $release
+        | $release.files[]
+        | select(.os == "linux" and .arch == $architecture and .kind == "archive")
+        | [$release.version, .filename, .sha256]
+      ][0]
+      | @tsv
+    '
+  )
+  IFS=$'\t' read -r release archive checksum <<< "${asset}"
+  if [[ ! "${release}" =~ ^go[0-9]+\.[0-9]+(\.[0-9]+)?$ ]] ||
+     [[ "${archive}" != "${release}.linux-${architecture}.tar.gz" ]] ||
+     [[ ! "${checksum}" =~ ^[0-9a-f]{64}$ ]]; then
+    echo "sky-tools: could not determine the latest stable Go release" >&2
+    return 1
+  fi
+  printf '%s\n' "${asset}"
+}
+
+install_go_asset() {
+  local archive checksum release temp_dir target
+  release="$1"
+  archive="$2"
+  checksum="$3"
+  temp_dir=$(mktemp -d)
+  target="${GO_INSTALL_ROOT}/releases/${release}"
+
+  (
+    trap 'rm -rf "${temp_dir}"' EXIT
+    download_to_stdout "https://go.dev/dl/${archive}" > "${temp_dir}/${archive}"
+    printf '%s  %s\n' "${checksum}" "${temp_dir}/${archive}" | sha256sum --check --status
+    tar -xzf "${temp_dir}/${archive}" -C "${temp_dir}"
+    [[ -x "${temp_dir}/go/bin/go" ]] || {
+      echo "sky-tools: Go archive has an unexpected layout" >&2
+      return 1
+    }
+    mkdir -p "${GO_INSTALL_ROOT}/releases"
+    if [[ ! -x "${target}/bin/go" ]]; then
+      rm -rf "${target}"
+      mv "${temp_dir}/go" "${target}"
+    fi
+    ln -sfnT "${target}" "${GO_INSTALL_ROOT}/current"
+  )
+}
+
+ensure_go() {
+  if [[ ! -x "${GOROOT}/bin/go" ]]; then
+    local archive checksum release
+    IFS=$'\t' read -r release archive checksum < <(latest_go_asset)
+    log "installing Go ${release}"
+    install_go_asset "${release}" "${archive}" "${checksum}"
+  fi
+}
+
+update_go() {
+  local archive checksum installed_release release
+  IFS=$'\t' read -r release archive checksum < <(latest_go_asset)
+  installed_release=$(
+    "${GOROOT}/bin/go" version | awk '{ print $3 }'
+  )
+  if [[ "${installed_release}" != "${release}" ]]; then
+    log "updating Go ${installed_release} -> ${release}"
+    install_go_asset "${release}" "${archive}" "${checksum}"
+  fi
+}
+
+corretto_architecture() {
+  case "$(uname -m)" in
+    x86_64|amd64)
+      printf 'x64\n'
+      ;;
+    aarch64|arm64)
+      printf 'aarch64\n'
+      ;;
+    *)
+      echo "sky-tools: Amazon Corretto does not support architecture $(uname -m) in this container" >&2
+      return 1
+      ;;
+  esac
+}
+
+latest_corretto_asset() {
+  local architecture archive checksum download_url
+  if [[ ! "${CORRETTO_VERSION}" =~ ^[0-9]+$ ]]; then
+    echo "sky-tools: invalid Amazon Corretto version ${CORRETTO_VERSION}" >&2
+    return 1
+  fi
+  architecture=$(corretto_architecture)
+  archive="amazon-corretto-${CORRETTO_VERSION}-${architecture}-linux-jdk.tar.gz"
+  download_url="https://corretto.aws/downloads/latest/${archive}"
+  checksum=$(
+    download_to_stdout "https://corretto.aws/downloads/latest_sha256/${archive}"
+  )
+  if [[ ! "${checksum}" =~ ^[0-9a-f]{64}$ ]]; then
+    echo "sky-tools: could not determine the latest Amazon Corretto ${CORRETTO_VERSION} checksum" >&2
+    return 1
+  fi
+  printf '%s\t%s\t%s\n' "${archive}" "${download_url}" "${checksum}"
+}
+
+install_corretto_asset() {
+  local archive checksum download_url temp_dir target
+  archive="$1"
+  download_url="$2"
+  checksum="$3"
+  temp_dir=$(mktemp -d)
+  target="${JDK_INSTALL_ROOT}/releases/corretto-${CORRETTO_VERSION}-${checksum:0:16}"
+
+  (
+    trap 'rm -rf "${temp_dir}"' EXIT
+    mkdir -p "${temp_dir}/extracted"
+    download_to_stdout "${download_url}" > "${temp_dir}/${archive}"
+    printf '%s  %s\n' "${checksum}" "${temp_dir}/${archive}" | sha256sum --check --status
+    tar -xzf "${temp_dir}/${archive}" -C "${temp_dir}/extracted"
+
+    shopt -s nullglob dotglob
+    local extracted_entries=("${temp_dir}/extracted"/*)
+    if (( ${#extracted_entries[@]} != 1 )) || [[ ! -x "${extracted_entries[0]}/bin/java" ]]; then
+      echo "sky-tools: Amazon Corretto archive has an unexpected layout" >&2
+      return 1
+    fi
+    mkdir -p "${JDK_INSTALL_ROOT}/releases"
+    if [[ ! -x "${target}/bin/java" ]]; then
+      rm -rf "${target}"
+      mv "${extracted_entries[0]}" "${target}"
+    fi
+    printf '%s\n' "amazon-corretto-${CORRETTO_VERSION}" > "${target}/.sky-tools-provider"
+    printf '%s\n' "${checksum}" > "${target}/.sky-tools-sha256"
+    ln -sfnT "${target}" "${JDK_INSTALL_ROOT}/current"
+  )
+}
+
+ensure_jdk() {
+  local expected_provider
+  expected_provider="amazon-corretto-${CORRETTO_VERSION}"
+  if [[ ! -x "${JAVA_HOME}/bin/java" ||
+        ! -x "${JAVA_HOME}/bin/javac" ||
+        ! -f "${JAVA_HOME}/.sky-tools-provider" ||
+        "$(<"${JAVA_HOME}/.sky-tools-provider")" != "${expected_provider}" ]]; then
+    local archive checksum download_url
+    IFS=$'\t' read -r archive download_url checksum < <(latest_corretto_asset)
+    log "installing Amazon Corretto ${CORRETTO_VERSION}"
+    install_corretto_asset "${archive}" "${download_url}" "${checksum}"
+  fi
+}
+
+update_jdk() {
+  local archive checksum download_url installed_checksum
+  IFS=$'\t' read -r archive download_url checksum < <(latest_corretto_asset)
+  installed_checksum="unknown"
+  if [[ -f "${JAVA_HOME}/.sky-tools-sha256" ]]; then
+    installed_checksum=$(<"${JAVA_HOME}/.sky-tools-sha256")
+  fi
+  if [[ "${installed_checksum}" != "${checksum}" ]]; then
+    log "updating Amazon Corretto ${CORRETTO_VERSION}"
+    install_corretto_asset "${archive}" "${download_url}" "${checksum}"
   fi
 }
 
@@ -334,6 +521,8 @@ ensure_all() {
   ensure_managed_tool Node.js ensure_node
   ensure_managed_tool Bun ensure_bun
   ensure_managed_tool .NET ensure_dotnet
+  ensure_managed_tool Go ensure_go
+  ensure_managed_tool "Amazon Corretto JDK" ensure_jdk
   ensure_managed_tool fzf ensure_fzf
   ensure_managed_tool "GitHub CLI" ensure_github_cli
   ensure_managed_tool opam/OCaml ensure_opam
@@ -366,6 +555,10 @@ update_all() {
 
   log "updating .NET LTS"
   install_dotnet_lts
+
+  update_go
+
+  update_jdk
 
   log "updating fzf"
   git -C "${FZF_HOME}" pull --ff-only
@@ -440,6 +633,9 @@ show_status() {
   version_line pnpm pnpm --version
   version_line bun "${BUN_INSTALL}/bin/bun" --version
   version_line dotnet "${DOTNET_ROOT}/dotnet" --version
+  version_line go "${GOROOT}/bin/go" version
+  version_line java "${JAVA_HOME}/bin/java" -version
+  version_line javac "${JAVA_HOME}/bin/javac" -version
   version_line fzf "${FZF_HOME}/bin/fzf" --version
   version_line gh "${LOCAL_BIN}/gh" --version
   version_line opam "${LOCAL_BIN}/opam" --version

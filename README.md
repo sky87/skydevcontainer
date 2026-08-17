@@ -10,6 +10,8 @@ A VS Code Dev Container with a multi-language development environment based on D
 - **Node.js**: via nvm (LTS version) with pnpm
 - **Bun**: JavaScript/TypeScript runtime and package manager
 - **.NET**: LTS version
+- **Go**: latest stable release
+- **Java**: latest Amazon Corretto 25 LTS release
 - **OCaml**: latest stable compiler via opam
 - **Lean 4**: stable release channel via elan
 - **LaTeX**: texlive with latexmk
@@ -43,10 +45,13 @@ sky-tools update
 sky-tools status
 ```
 
-`sky-tools` manages uv, Rust, nvm/Node.js, pnpm, Bun, .NET, fzf, GitHub CLI,
-opam/OCaml, elan/Lean 4, Claude Code, Codex, and pi. Operating-system packages
-and native libraries remain part of the container image. Downloaded GitHub CLI
-archives are verified against the checksum published with each GitHub release.
+`sky-tools` manages uv, Rust, nvm/Node.js, pnpm, Bun, .NET, Go, the Amazon
+Corretto JDK, fzf, GitHub CLI, opam/OCaml, elan/Lean 4, Claude Code, Codex, and
+pi. Operating-system packages and native libraries remain part of the container
+image. Downloaded Go, Corretto, and GitHub CLI archives are verified against the
+checksums published with their releases.
+Set `SKY_TOOLS_CORRETTO_VERSION` to select a different Corretto major release;
+the default is the current LTS, version 25.
 Opam package sandboxing is disabled because unprivileged user namespaces are
 unavailable inside the container; Docker provides the outer isolation
 boundary.

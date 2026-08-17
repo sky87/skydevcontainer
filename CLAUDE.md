@@ -19,7 +19,7 @@ Do not run Docker image builds locally when troubleshooting CI failures. Commit 
 ## Architecture
 
 - **Dockerfile**: Defines the Debian Trixie base, native packages, compiler and document toolchains, the `dev` user, and the persistent-tool environment. The username/groupname are configurable via `USERNAME`/`GROUPNAME` build args (default: `dev`).
-- **sky-tools**: Installs and updates frequently changing developer tools in the user's persistent home directory. GitHub CLI release archives are verified against GitHub's published SHA-256 checksums before installation.
+- **sky-tools**: Installs and updates frequently changing developer tools in the user's persistent home directory. Go, Amazon Corretto, and GitHub CLI release archives are verified against their published SHA-256 checksums before installation.
 - **example/.devcontainer/**: A ready-to-copy `.devcontainer` directory for new projects. Contains `devcontainer.json` (VS Code Dev Container config using `ghcr.io/sky87/skydevcontainer:latest` with a Docker volume for `/home/dev`) and `post-create.sh` (auto-installs project dependencies via bun, uv, cargo, dotnet).
 - **zshrc**: System zshrc copied to `/etc/zsh/zshrc` that sets up PATH and sources nvm/fzf.
 
@@ -32,6 +32,8 @@ Do not run Docker image builds locally when troubleshooting CI failures. Commit 
 | nvm/Node.js | `~/.nvm` with command links in `~/.local/bin` |
 | pnpm global binaries | `~/.local/share/pnpm` |
 | .NET | `~/.dotnet` |
+| Go toolchain | `~/.go/current`; workspace and installed commands in `~/go` |
+| Amazon Corretto JDK | `~/.jdk/current` |
 | fzf | `~/.fzf` |
 | GitHub CLI | `~/.local/bin/gh` |
 | opam/OCaml | `~/.local/bin/opam` and `~/.opam` |

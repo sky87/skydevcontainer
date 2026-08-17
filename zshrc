@@ -48,7 +48,10 @@ $ '
 export PNPM_HOME="$HOME/.local/share/pnpm"
 export OPAMROOT="$HOME/.opam"
 export ELAN_HOME="$HOME/.elan"
-export PATH="$HOME/.local/bin:$PNPM_HOME/bin:$PNPM_HOME:$HOME/.cargo/bin:$HOME/.bun/bin:$HOME/.dotnet:$HOME/.fzf/bin:$OPAMROOT/default/bin:$ELAN_HOME/bin:$PATH"
+export GOROOT="$HOME/.go/current"
+export GOPATH="$HOME/go"
+export JAVA_HOME="$HOME/.jdk/current"
+export PATH="$HOME/.local/bin:$PNPM_HOME/bin:$PNPM_HOME:$HOME/.cargo/bin:$HOME/.bun/bin:$HOME/.dotnet:$GOROOT/bin:$GOPATH/bin:$JAVA_HOME/bin:$HOME/.fzf/bin:$OPAMROOT/default/bin:$ELAN_HOME/bin:$PATH"
 
 # opam
 [ -s "$OPAMROOT/opam-init/init.zsh" ] && . "$OPAMROOT/opam-init/init.zsh" > /dev/null 2> /dev/null
