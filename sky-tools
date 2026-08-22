@@ -486,7 +486,11 @@ ensure_elan() {
         -y \
         --no-modify-path \
         --default-toolchain leanprover/lean4:stable
-  elif ! (cd "${HOME}" && "${ELAN_HOME}/bin/lean" --version >/dev/null 2>&1); then
+  # Query elan's local toolchain registry instead of starting the Lean proxy.
+  # The proxy can spend tens of seconds resolving a tracking toolchain even
+  # though ensure only needs to know that an installed default exists.
+  elif ! "${ELAN_HOME}/bin/elan" toolchain list 2>/dev/null | \
+    grep -Eq ' \(default\)$'; then
     log "installing Lean 4 stable"
     "${ELAN_HOME}/bin/elan" default leanprover/lean4:stable
   fi
