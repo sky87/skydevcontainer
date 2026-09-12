@@ -22,7 +22,7 @@ A VS Code Dev Container with a multi-language development environment based on D
 - Utilities: git, GitHub CLI (`gh`), curl, fzf, Neovim, tmux, zsh, openssh-client, bubblewrap
 - Documents: pandoc, imagemagick, zip
 - Profiling/coverage: linux-perf, valgrind, lcov
-- AI: Claude Code CLI, Codex CLI, pi
+- AI: Claude Code CLI, Codex CLI, OpenCode, pi
 
 ## Persistent Developer Tools
 
@@ -46,10 +46,10 @@ sky-tools status
 ```
 
 `sky-tools` manages uv, Rust, nvm/Node.js, pnpm, Bun, .NET, Go, the Amazon
-Corretto JDK, fzf, GitHub CLI, opam/OCaml, elan/Lean 4, Claude Code, Codex, and
-pi. Operating-system packages and native libraries remain part of the container
-image. Downloaded Go, Corretto, and GitHub CLI archives are verified against the
-checksums published with their releases.
+Corretto JDK, fzf, GitHub CLI, opam/OCaml, elan/Lean 4, Claude Code, Codex,
+OpenCode, and pi. Operating-system packages and native libraries remain part of
+the container image. Downloaded Go, Corretto, and GitHub CLI archives are
+verified against the checksums published with their releases.
 Set `SKY_TOOLS_CORRETTO_VERSION` to select a different Corretto major release;
 the default is the current LTS, version 25.
 Opam package sandboxing is disabled because unprivileged user namespaces are

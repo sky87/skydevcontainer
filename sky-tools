@@ -14,6 +14,7 @@ readonly FZF_HOME="${HOME}/.fzf"
 readonly OPAMROOT="${HOME}/.opam"
 readonly ELAN_HOME="${HOME}/.elan"
 readonly PNPM_HOME="${HOME}/.local/share/pnpm"
+readonly OPENCODE_BIN="${HOME}/.opencode/bin"
 readonly LOCAL_BIN="${HOME}/.local/bin"
 readonly STATE_DIR="${XDG_STATE_HOME:-${HOME}/.local/state}/sky-tools"
 
@@ -24,7 +25,7 @@ export JAVA_HOME="${JDK_INSTALL_ROOT}/current"
 export UV_INSTALL_DIR="${LOCAL_BIN}"
 export UV_NO_MODIFY_PATH=1
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
-export PATH="${LOCAL_BIN}:${PNPM_HOME}/bin:${PNPM_HOME}:${CARGO_HOME}/bin:${BUN_INSTALL}/bin:${DOTNET_ROOT}:${GOROOT}/bin:${GOPATH}/bin:${JAVA_HOME}/bin:${FZF_HOME}/bin:${OPAMROOT}/default/bin:${ELAN_HOME}/bin:${PATH}"
+export PATH="${LOCAL_BIN}:${OPENCODE_BIN}:${PNPM_HOME}/bin:${PNPM_HOME}:${CARGO_HOME}/bin:${BUN_INSTALL}/bin:${DOTNET_ROOT}:${GOROOT}/bin:${GOPATH}/bin:${JAVA_HOME}/bin:${FZF_HOME}/bin:${OPAMROOT}/default/bin:${ELAN_HOME}/bin:${PATH}"
 
 usage() {
   cat <<'EOF'
@@ -510,6 +511,17 @@ ensure_codex() {
   fi
 }
 
+install_opencode() {
+  download_to_stdout https://opencode.ai/install | bash -s -- --no-modify-path
+}
+
+ensure_opencode() {
+  if [[ ! -x "${OPENCODE_BIN}/opencode" ]]; then
+    log "installing OpenCode"
+    install_opencode
+  fi
+}
+
 ensure_pi() {
   if [[ ! -x "${PNPM_HOME}/bin/pi" && ! -x "${PNPM_HOME}/pi" ]]; then
     log "installing pi"
@@ -533,6 +545,7 @@ ensure_all() {
   ensure_managed_tool "Lean 4" ensure_elan
   ensure_managed_tool "Claude Code" ensure_claude
   ensure_managed_tool Codex ensure_codex
+  ensure_managed_tool OpenCode ensure_opencode
   ensure_managed_tool pi ensure_pi
   log "all tools are available"
 }
@@ -598,6 +611,9 @@ update_all() {
   log "updating Codex"
   download_to_stdout https://chatgpt.com/codex/install.sh | sh
 
+  log "updating OpenCode"
+  install_opencode
+
   log "updating pi"
   pnpm add --global --ignore-scripts @earendil-works/pi-coding-agent@latest
 
@@ -648,6 +664,7 @@ show_status() {
   version_line lean lean_version
   version_line claude "${LOCAL_BIN}/claude" --version
   version_line codex "${LOCAL_BIN}/codex" --version
+  version_line opencode "${OPENCODE_BIN}/opencode" --version
   version_line pi pi --version
 }
 
