@@ -40,6 +40,7 @@ Do not run Docker image builds locally when troubleshooting CI failures. Commit 
 | elan/Lean | `~/.elan` |
 | Claude Code | `~/.local/bin/claude` |
 | Codex | `~/.local/bin/codex` |
+| OpenCode | `~/.opencode/bin/opencode` |
 | Bun | `~/.bun` |
 | pi | `~/.local/share/pnpm` |
 
