@@ -1,6 +1,6 @@
 FROM debian:trixie-slim AS skytools-release
 
-ARG SKYTOOLS_VERSION=v0.3.0
+ARG SKYTOOLS_VERSION=v0.4.0
 ARG TARGETARCH
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl \
   && rm -rf /var/lib/apt/lists/*

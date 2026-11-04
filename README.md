@@ -61,10 +61,15 @@ Node.js, .NET, Java, and OCaml resolve the latest upstream LTS; other tools use
 their latest stable channels. The old runtime-version overrides are not used.
 `sky-tools` remains a compatibility alias for the same executable.
 
-The image defaults to skytools `v0.3.0`. Select another published manager release
+The image defaults to skytools `v0.4.0`. Select another published manager release
 with `docker build --build-arg SKYTOOLS_VERSION=vX.Y.Z -t devcontainer-dev:latest .`.
 Both Linux amd64 and arm64 download their matching binary and verify SHA-256.
 The image build runs `skytools deps` to verify the complete native package set.
+
+`skytools self-update` updates a user-owned executable from GitHub's latest stable
+release. The image-owned `/usr/local/bin/skytools` requires rebuilding the image;
+for independent home updates, copy it into `~/.local/bin/skytools` first and run
+that copy's `self-update` command.
 
 Opam package sandboxing is explicitly disabled with
 `SKY_TOOLS_DISABLE_OPAM_SANDBOX=1` because unprivileged user namespaces are
