@@ -19,10 +19,12 @@ A VS Code Dev Container with a multi-language development environment based on D
 ## Additional Tools
 
 - Build tools: make, cmake, ninja-build
-- Utilities: git, GitHub CLI (`gh`), curl, fzf, btop, Neovim, tmux, zsh, openssh-client, bubblewrap
+- Utilities: git, GitHub CLI (`gh`), curl, fzf, btop, Neovim, tmux, zsh, openssh-client
 - Documents: pandoc, imagemagick, zip
 - Profiling/coverage: linux-perf, valgrind, lcov
 - AI: Claude Code CLI, Codex CLI, OpenCode, pi
+- Browser automation: Microsoft's `playwright-cli` for agents, Playwright Node
+  libraries with `playwright-node` for scripts, Chromium, Firefox, and WebKit
 
 ## Persistent Developer Tools
 
@@ -37,34 +39,61 @@ The first container creation installs any missing tools. Existing tools are not
 updated automatically:
 
 ```bash
-skytools ensure
+skytools ensure --only "${SKYTOOLS_PACKAGES:-all}"
 ```
 
 Update every managed tool explicitly or inspect the installed versions:
 
 ```bash
 skytools                         # interactive installed/latest versions and updates
-skytools update                  # update explicitly to current LTS/stable releases
+skytools update --only "${SKYTOOLS_PACKAGES:-all}" # update selected tools explicitly
 skytools status                  # fast, offline local inventory
 skytools status --versions       # query installed executables
-skytools deps                    # inspect required system packages
+skytools deps --only "${SKYTOOLS_PACKAGES:-all}" # inspect selected system prerequisites
+skytools deps install --only playwright-cli # explicitly install missing prerequisites as root
 ```
 
 `skytools` manages uv, Rust, nvm/Node.js, pnpm, Bun, .NET, Go, the Amazon
 Corretto JDK, fzf, GitHub CLI, opam/OCaml, elan/Lean 4, Claude Code, Codex,
-OpenCode, pi, and btop. Operating-system packages and native libraries remain part
-of the container image. Required packages are checked before installations and
-updates; a missing prerequisite stops the operation with an apt command to run.
+OpenCode, pi, btop, Playwright, and the Playwright agent CLI. Operating-system
+packages and native libraries remain part of the container image. The existing
+apt list supplies unrelated image tools such as Clang, editors, and document
+utilities; `skytools deps install` supplies the selected managed tools' system
+prerequisites. Required packages are checked again before installations and
+updates; a missing prerequisite stops the operation with a command to run.
 Downloaded Go, Corretto, GitHub CLI, and btop archives are
 verified against the checksums published with their releases.
 Node.js, .NET, Java, and OCaml resolve the latest upstream LTS; other tools use
 their latest stable channels. The old runtime-version overrides are not used.
 `sky-tools` remains a compatibility alias for the same executable.
 
-The image defaults to skytools `v0.4.0`. Select another published manager release
+The executable is root-owned at `/usr/local/bin/skytools`, with
+`/usr/local/bin/sky-tools` as a compatibility symlink. Managed tools go into the
+persistent `/home/dev` instead.
+
+The image defaults to skytools `v0.5.0`. Select another published manager release
 with `docker build --build-arg SKYTOOLS_VERSION=vX.Y.Z -t devcontainer-dev:latest .`.
 Both Linux amd64 and arm64 download their matching binary and verify SHA-256.
-The image build runs `skytools deps` to verify the complete native package set.
+The image build runs `skytools deps install --only "$SKYTOOLS_PACKAGES"` as root,
+then verifies the selected prerequisites as the target user.
+
+`SKYTOOLS_PACKAGES` is a comma-separated build argument, defaulting to `all`.
+It is also saved in the image environment for `post-create.sh`. For example:
+
+```bash
+docker build --build-arg SKYTOOLS_PACKAGES=go,uv,playwright-cli -t devcontainer-dev:latest .
+```
+
+The example selects Go, uv, and the agent CLI, plus its Playwright and Node
+dependencies. Tool dependencies are declared in skytools code and resolved for
+both system prerequisites and home installation. Changing the list requires an
+image rebuild to include its prerequisites. Existing tools in the persistent home
+are retained. Project restore steps skip tools that are unavailable.
+
+For browser scripts, use `playwright-node script.mjs` or `playwright-node script.cjs`
+to import `playwright`/`playwright-core` from the shared home installation.
+Project-local packages take precedence. The agent CLI defaults to downloaded
+Chromium; existing user or project configuration is preserved.
 
 `skytools self-update` updates a user-owned executable from GitHub's latest stable
 release. The image-owned `/usr/local/bin/skytools` requires rebuilding the image;

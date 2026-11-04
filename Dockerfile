@@ -1,6 +1,6 @@
 FROM debian:trixie-slim AS skytools-release
 
-ARG SKYTOOLS_VERSION=v0.4.0
+ARG SKYTOOLS_VERSION=v0.5.0
 ARG TARGETARCH
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl \
   && rm -rf /var/lib/apt/lists/*
@@ -27,7 +27,8 @@ ARG GROUPNAME=dev
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Base utilities + toolchains
+# Image utilities, compiler tools, and documents. Managed tools' prerequisites
+# are resolved separately by skytools below.
 RUN apt-get update && apt-get install -y --no-install-recommends \
   ca-certificates \
   curl \
@@ -44,11 +45,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   build-essential \
   make \
   cmake \
-  m4 \
   ninja-build \
-  bubblewrap \
   pkg-config \
-  rsync \
   openssh-client \
   # C/C++ (clang)
   clang \
@@ -78,24 +76,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   pandoc \
   zip \
   imagemagick \
-  # .NET dependencies
-  libicu-dev \
-  libssl-dev \
-  # Playwright browser dependencies
-  libasound2 \
-  libatk1.0-0t64 libcairo-gobject2 libcairo2 libdbus-1-3 libdbus-glib-1-2 \
-  libfontconfig1 libfreetype6 libgdk-pixbuf-2.0-0 libglib2.0-0t64 libgtk-3-0t64 \
-  libharfbuzz0b libpango-1.0-0 libpangocairo-1.0-0 libx11-6 libx11-xcb1 libxcb-shm0 \
-  libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 \
-  libxrandr2 libxrender1 libxtst6 libnspr4 libnss3 \
-  fonts-noto-color-emoji fonts-ipafont-gothic fonts-tlwg-loma-otf \
-  fonts-unifont fonts-wqy-zenhei fonts-liberation fonts-freefont-ttf \
-  xvfb xfonts-encodings xfonts-scalable xfonts-utils xserver-common \
   && rm -rf /var/lib/apt/lists/*
 
-# Keep the large base-package layer cached when manager prerequisites change.
-RUN apt-get update && apt-get install -y --no-install-recommends \
-  libgmp-dev libgssapi-krb5-2 libstdc++6 zlib1g tzdata ncurses-base \
+# The same package list controls image prerequisites and persistent-home setup.
+ARG SKYTOOLS_PACKAGES=all
+ENV SKYTOOLS_PACKAGES=${SKYTOOLS_PACKAGES} \
+  SKY_TOOLS_DISABLE_OPAM_SANDBOX=1
+COPY --from=skytools-release /out/skytools /usr/local/bin/skytools
+RUN ln -s skytools /usr/local/bin/sky-tools \
+  && skytools deps install --only "$SKYTOOLS_PACKAGES" \
   && rm -rf /var/lib/apt/lists/*
 
 # Create user with passwordless sudo and zsh shell
@@ -106,7 +95,6 @@ RUN useradd -m -s /bin/zsh ${USERNAME} \
 # Mutable developer tools are installed after the persistent home volume is mounted.
 ENV HOME=/home/${USERNAME}
 ENV UV_INSTALL_DIR=${HOME}/.local/bin \
-  SKY_TOOLS_DISABLE_OPAM_SANDBOX=1 \
   RUSTUP_HOME=${HOME}/.rustup \
   CARGO_HOME=${HOME}/.cargo \
   NVM_DIR=${HOME}/.nvm \
@@ -124,12 +112,10 @@ ENV UV_INSTALL_DIR=${HOME}/.local/bin \
   LANG=C.UTF-8
 ENV PATH="${HOME}/.local/bin:${HOME}/.opencode/bin:${PNPM_HOME}/bin:${PNPM_HOME}:${CARGO_HOME}/bin:${BUN_INSTALL}/bin:${DOTNET_ROOT}:${GOROOT}/bin:${GOPATH}/bin:${JAVA_HOME}/bin:${FZF_HOME}/bin:${OPAMROOT}/default/bin:${ELAN_HOME}/bin:${PATH}"
 
-# Install the persistent tool manager and default shell configuration.
-COPY --from=skytools-release /out/skytools /usr/local/bin/skytools
-RUN ln -s skytools /usr/local/bin/sky-tools
+# Install the default shell configuration.
 COPY zshrc /etc/zsh/zshrc
 
 USER ${USERNAME}
 
 # Fail the image build if the release cannot run or native prerequisites drift.
-RUN skytools version && skytools deps
+RUN skytools version && skytools deps --only "$SKYTOOLS_PACKAGES"

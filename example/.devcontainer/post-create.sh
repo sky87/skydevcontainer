@@ -2,32 +2,48 @@
 set -e
 
 # Install mutable developer tools into the persistent home volume.
-skytools ensure
+skytools ensure --only "${SKYTOOLS_PACKAGES:-all}"
 
 # Node.js (bun)
 if [ -f "package.json" ]; then
-    echo "Installing Node.js dependencies with bun..."
-    bun install
+    if command -v bun >/dev/null 2>&1; then
+        echo "Installing Node.js dependencies with bun..."
+        bun install
+    else
+        echo "Skipping Node.js dependencies: bun is not installed."
+    fi
 fi
 
 # Python (uv)
 if [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
-    echo "Installing Python dependencies with uv..."
-    if [ -f "pyproject.toml" ]; then
-        uv sync
+    if command -v uv >/dev/null 2>&1; then
+        echo "Installing Python dependencies with uv..."
+        if [ -f "pyproject.toml" ]; then
+            uv sync
+        else
+            uv pip install -r requirements.txt
+        fi
     else
-        uv pip install -r requirements.txt
+        echo "Skipping Python dependencies: uv is not installed."
     fi
 fi
 
 # Rust
 if [ -f "Cargo.toml" ]; then
-    echo "Fetching Rust dependencies..."
-    cargo fetch
+    if command -v cargo >/dev/null 2>&1; then
+        echo "Fetching Rust dependencies..."
+        cargo fetch
+    else
+        echo "Skipping Rust dependencies: cargo is not installed."
+    fi
 fi
 
 # .NET
-if ls *.csproj 1> /dev/null 2>&1 || ls *.fsproj 1> /dev/null 2>&1 || [ -f "*.sln" ]; then
-    echo "Restoring .NET dependencies..."
-    dotnet restore
+if compgen -G '*.csproj' >/dev/null || compgen -G '*.fsproj' >/dev/null || compgen -G '*.sln' >/dev/null; then
+    if command -v dotnet >/dev/null 2>&1; then
+        echo "Restoring .NET dependencies..."
+        dotnet restore
+    else
+        echo "Skipping .NET dependencies: dotnet is not installed."
+    fi
 fi
