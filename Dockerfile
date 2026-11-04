@@ -1,4 +1,26 @@
-FROM debian:trixie-slim
+FROM debian:trixie-slim AS skytools-release
+
+ARG SKYTOOLS_VERSION=v0.3.0
+ARG TARGETARCH
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl \
+  && rm -rf /var/lib/apt/lists/*
+RUN set -eu; \
+  architecture="${TARGETARCH:-$(dpkg --print-architecture)}"; \
+  case "$architecture" in amd64|arm64) ;; *) echo "Unsupported architecture: $architecture" >&2; exit 1 ;; esac; \
+  case "$SKYTOOLS_VERSION" in v[0-9]*) ;; *) echo 'SKYTOOLS_VERSION must be a release tag' >&2; exit 1 ;; esac; \
+  asset="skytools_linux_${architecture}"; \
+  release="https://github.com/sky87/skytools/releases/download/${SKYTOOLS_VERSION}"; \
+  mkdir -p /tmp/skytools /out; \
+  curl --fail --show-error --location --retry 3 "$release/$asset" -o "/tmp/skytools/$asset"; \
+  curl --fail --show-error --location --retry 3 "$release/SHA256SUMS" -o /tmp/skytools/SHA256SUMS; \
+  cd /tmp/skytools; \
+  test "$(grep -c "  ${asset}$" SHA256SUMS)" = 1; \
+  grep "  ${asset}$" SHA256SUMS | sha256sum --check -; \
+  install -m 0755 "$asset" /out/skytools; \
+  /out/skytools version; \
+  rm -rf /tmp/skytools
+
+FROM debian:trixie-slim AS devcontainer
 
 ARG USERNAME=dev
 ARG GROUPNAME=dev
@@ -71,6 +93,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   xvfb xfonts-encodings xfonts-scalable xfonts-utils xserver-common \
   && rm -rf /var/lib/apt/lists/*
 
+# Keep the large base-package layer cached when manager prerequisites change.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  libgmp-dev libgssapi-krb5-2 libstdc++6 zlib1g tzdata ncurses-base \
+  && rm -rf /var/lib/apt/lists/*
+
 # Create user with passwordless sudo and zsh shell
 RUN useradd -m -s /bin/zsh ${USERNAME} \
   && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} \
@@ -79,6 +106,7 @@ RUN useradd -m -s /bin/zsh ${USERNAME} \
 # Mutable developer tools are installed after the persistent home volume is mounted.
 ENV HOME=/home/${USERNAME}
 ENV UV_INSTALL_DIR=${HOME}/.local/bin \
+  SKY_TOOLS_DISABLE_OPAM_SANDBOX=1 \
   RUSTUP_HOME=${HOME}/.rustup \
   CARGO_HOME=${HOME}/.cargo \
   NVM_DIR=${HOME}/.nvm \
@@ -97,7 +125,11 @@ ENV UV_INSTALL_DIR=${HOME}/.local/bin \
 ENV PATH="${HOME}/.local/bin:${HOME}/.opencode/bin:${PNPM_HOME}/bin:${PNPM_HOME}:${CARGO_HOME}/bin:${BUN_INSTALL}/bin:${DOTNET_ROOT}:${GOROOT}/bin:${GOPATH}/bin:${JAVA_HOME}/bin:${FZF_HOME}/bin:${OPAMROOT}/default/bin:${ELAN_HOME}/bin:${PATH}"
 
 # Install the persistent tool manager and default shell configuration.
-COPY --chmod=0755 sky-tools /usr/local/bin/sky-tools
+COPY --from=skytools-release /out/skytools /usr/local/bin/skytools
+RUN ln -s skytools /usr/local/bin/sky-tools
 COPY zshrc /etc/zsh/zshrc
 
 USER ${USERNAME}
+
+# Fail the image build if the release cannot run or native prerequisites drift.
+RUN skytools version && skytools deps

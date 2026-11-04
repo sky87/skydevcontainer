@@ -2,7 +2,7 @@
 set -e
 
 # Install mutable developer tools into the persistent home volume.
-sky-tools ensure
+skytools ensure
 
 # Node.js (bun)
 if [ -f "package.json" ]; then
