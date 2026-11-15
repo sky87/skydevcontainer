@@ -14,13 +14,13 @@ A VS Code Dev Container with a multi-language development environment based on D
 - **Java**: latest Java LTS via Amazon Corretto
 - **OCaml**: latest upstream LTS compiler via opam
 - **Lean 4**: stable release channel via elan
-- **LaTeX**: texlive with latexmk
+- **LaTeX**: texlive (including LuaLaTeX) with latexmk, DejaVu Mono and GNU FreeFont
 
 ## Additional Tools
 
 - Build tools: make, cmake, ninja-build
 - Utilities: git, GitHub CLI (`gh`), curl, fzf, btop, Neovim, tmux, zsh, openssh-client
-- Documents: pandoc, imagemagick, zip
+- Documents: pandoc, imagemagick, librsvg (`rsvg-convert`), zip
 - Profiling/coverage: linux-perf, valgrind, lcov
 - AI: Claude Code CLI, Codex CLI, OpenCode, pi
 - Browser automation: Microsoft's `playwright-cli` for agents, Playwright Node

@@ -71,11 +71,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   texlive-latex-recommended \
   texlive-fonts-recommended \
   texlive-latex-extra \
+  texlive-luatex \
   latexmk \
+  # Fonts for code in PDFs
+  fonts-dejavu-mono \
+  fonts-freefont-ttf \
   # Document tools
   pandoc \
   zip \
   imagemagick \
+  librsvg2-bin \
   && rm -rf /var/lib/apt/lists/*
 
 # The same package list controls image prerequisites and persistent-home setup.
