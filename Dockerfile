@@ -81,6 +81,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   zip \
   imagemagick \
   librsvg2-bin \
+  poppler-utils \
   && rm -rf /var/lib/apt/lists/*
 
 # The same package list controls image prerequisites and persistent-home setup.

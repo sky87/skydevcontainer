@@ -20,7 +20,7 @@ A VS Code Dev Container with a multi-language development environment based on D
 
 - Build tools: make, cmake, ninja-build
 - Utilities: git, GitHub CLI (`gh`), curl, fzf, btop, Neovim, tmux, zsh, openssh-client
-- Documents: pandoc, imagemagick, librsvg (`rsvg-convert`), zip
+- Documents: pandoc, imagemagick, librsvg (`rsvg-convert`), poppler-utils (`pdftotext`, `pdftoppm`, ...), zip
 - Profiling/coverage: linux-perf, valgrind, lcov
 - AI: Claude Code CLI, Codex CLI, OpenCode, pi
 - Browser automation: Microsoft's `playwright-cli` for agents, Playwright Node
